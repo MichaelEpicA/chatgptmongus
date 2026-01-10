@@ -2,9 +2,21 @@ name: Build
 
 on:
   push:
-    branches: [ main, dev ]
+    branches:
+      - 'main'
+      - '*-hotfix'
+      - '*-beta'
+      - '*-dev'
+    paths:
+      - 'src/**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'main'
+      - '*-hotfix'
+      - '*-beta'
+      - '*-dev'
+    paths:
+      - 'src/**'
 
 jobs:
   build-mod:
