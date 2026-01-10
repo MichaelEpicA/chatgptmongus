@@ -50,7 +50,7 @@
 	</PropertyGroup>
 
 	<!-- Target to read game path (only if CopyToGame is true) -->
-	<Target Name="ReadGamePath" BeforeTargets="CopyModToGame">
+	<Target Name="ReadGamePath">
 		<PropertyGroup>
 			<GamePath Condition="Exists('$(ModPathFile)')">
 				$([System.IO.File]::ReadAllText('$(ModPathFile)').Trim())
@@ -61,17 +61,20 @@
 
 	<!-- Copy Mod to Game Folder -->
 	<Target Name="CopyModToGame" AfterTargets="PostBuildEvent"
-			Condition="'$(CopyToGame)' == 'true'">-->
-		<CallTarget Targets="ReadGamePath" Condition="Exists('$(ModPathFile)')" />
+			Condition="'$(CopyToGame)' == 'true'"
+			DependsOnTargets="ReadGamePath">
+
 		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll"
 			  DestinationFolder="$(GamePath)"
 			  SkipUnchangedFiles="true"
 			  Condition="'$(GamePath)' != '' and Exists('$(GamePath)')">
 			<Output TaskParameter="CopiedFiles" ItemName="CopiedMods" />
 		</Copy>
+
 		<Message Text="Successfully copied mod to: $(GamePath)"
 				 Importance="high"
 				 Condition="'@(CopiedMods)' != ''" />
+
 		<Warning Text="Game path not found. Create $(ModPathFile) with game folder path."
 				 Condition="'$(CopyToGame)' == 'true' and ('$(GamePath)' == '' or !Exists('$(GamePath)'))" />
 	</Target>
