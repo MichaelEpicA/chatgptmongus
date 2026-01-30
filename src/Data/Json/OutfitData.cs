@@ -67,6 +67,7 @@ internal sealed class OutfitData
         DataManager.Player.Customization.OnSkinChanged += Save;
         DataManager.Player.Customization.OnVisorChanged += Save;
         DataManager.Player.Customization.OnNamePlateChanged += Save;
+        Save.Invoke();
     }
 
     /// <summary>
@@ -85,15 +86,12 @@ internal sealed class OutfitData
                 data.NamePlateId == DataManager.Player.Customization.NamePlate)
             {
                 BetterDataManager.BetterDataFile.SelectedOutfitPreset = i;
-                BetterDataManager.BetterDataFile.Save();
                 return;
             }
             i++;
         }
 
         BetterDataManager.BetterDataFile.SelectedOutfitPreset = 0;
-        GetOutfitData(0).SetFromData();
-        BetterDataManager.BetterDataFile.Save();
     }
 
     /// <summary>
