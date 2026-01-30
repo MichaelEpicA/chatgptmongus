@@ -5,11 +5,20 @@ using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Json;
 
+/// <summary>
+/// Abstract base class for JSON file handling with serialization and deserialization capabilities.
+/// </summary>
 internal abstract class AbstractJsonFile
 {
+    /// <summary>
+    /// Gets the file path where the JSON data will be stored.
+    /// </summary>
     internal abstract string FilePath { get; }
     private bool _hasInit;
 
+    /// <summary>
+    /// Gets the JSON serializer options used for serialization and deserialization.
+    /// </summary>
     protected virtual JsonSerializerOptions SerializerOptions { get; } = new()
     {
         WriteIndented = true,
@@ -18,6 +27,9 @@ internal abstract class AbstractJsonFile
         PropertyNameCaseInsensitive = true,
     };
 
+    /// <summary>
+    /// Initializes the JSON file, creating it if it doesn't exist or loading existing data.
+    /// </summary>
     internal virtual void Init()
     {
         if (_hasInit) return;
@@ -33,6 +45,10 @@ internal abstract class AbstractJsonFile
         Save();
     }
 
+    /// <summary>
+    /// Loads data from the JSON file into the current instance.
+    /// </summary>
+    /// <returns>True if loading was successful, false otherwise.</returns>
     protected virtual bool Load()
     {
         try
@@ -74,6 +90,10 @@ internal abstract class AbstractJsonFile
         }
     }
 
+    /// <summary>
+    /// Attempts to read content from the file, returning an empty string on failure.
+    /// </summary>
+    /// <returns>The file content or an empty string if reading fails.</returns>
     private string TryReadFromFile()
     {
         try
@@ -86,11 +106,19 @@ internal abstract class AbstractJsonFile
         }
     }
 
+    /// <summary>
+    /// Reads the content from the JSON file.
+    /// </summary>
+    /// <returns>The content of the JSON file.</returns>
     protected virtual string ReadFromFile()
     {
         return File.ReadAllText(FilePath);
     }
 
+    /// <summary>
+    /// Saves the current instance's data to the JSON file.
+    /// </summary>
+    /// <returns>True if saving was successful, false otherwise.</returns>
     internal virtual bool Save()
     {
         try
@@ -107,11 +135,19 @@ internal abstract class AbstractJsonFile
         return true;
     }
 
+    /// <summary>
+    /// Writes the JSON string to the file.
+    /// </summary>
+    /// <param name="json">The JSON string to write.</param>
     protected virtual void WriteToFile(string json)
     {
         File.WriteAllText(FilePath, json);
     }
 
+    /// <summary>
+    /// Checks if the JSON file exists and contains valid data.
+    /// </summary>
+    /// <returns>True if the file exists and contains valid JSON data, false otherwise.</returns>
     private bool CheckFile()
     {
         var directory = Path.GetDirectoryName(FilePath);

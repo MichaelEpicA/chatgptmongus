@@ -2,12 +2,38 @@
 
 namespace BetterAmongUs.Modules.OptionItems;
 
-internal sealed class OptionStringItem : OptionItem<int>
+/// <summary>
+/// Represents an option item that selects from a list of string values.
+/// </summary>
+public sealed class OptionStringItem : OptionItem<int>
 {
+    /// <summary>
+    /// Gets or sets the valid range of indices for this string option.
+    /// </summary>
     private IntRange Range { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the array of translation keys for the string options.
+    /// </summary>
     private string[] TranslatorStrings { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets whether this option includes a random selection.
+    /// </summary>
     private bool CanBeRandom { get; set; }
 
+    /// <summary>
+    /// Creates a new string option item or returns an existing one with the same ID.
+    /// </summary>
+    /// <param name="id">The unique identifier for this option.</param>
+    /// <param name="tab">The tab this option belongs to.</param>
+    /// <param name="tranStr">The translation key for the option name.</param>
+    /// <param name="tranStrings">Array of translation keys for the selectable string values.</param>
+    /// <param name="defaultValue">The default index value.</param>
+    /// <param name="parent">Optional parent option for hierarchical organization.</param>
+    /// <param name="canBeRandom">Whether this option includes a random selection.</param>
+    /// <returns>A new or existing OptionStringItem instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when tranStrings has less than 2 elements.</exception>
     internal static OptionStringItem Create(int id, OptionTab tab, string tranStr, string[] tranStrings, int defaultValue, OptionItem? parent = null, bool canBeRandom = false)
     {
         if (tranStrings.Length < 2)
@@ -27,7 +53,7 @@ internal sealed class OptionStringItem : OptionItem<int>
         }
 
         OptionStringItem Item = new();
-        AllTBROptions.Add(Item);
+        AllOptions.Add(Item);
         Item._id = id;
         Item.Tab = tab;
         Item.Translation = tranStr;
@@ -53,11 +79,14 @@ internal sealed class OptionStringItem : OptionItem<int>
         return Item;
     }
 
+    /// <summary>
+    /// Creates the UI behavior for this string option.
+    /// </summary>
     protected sealed override void CreateBehavior()
     {
         TryLoad();
         if (!GameSettingMenu.Instance) return;
-        AllTBROptionsTemp.Add(this);
+        AllOptionsTemp.Add(this);
         var numberOption = UnityEngine.Object.Instantiate(Tab.AUTab.numberOptionOrigin, Tab.AUTab.settingsContainer);
         Option = numberOption;
         Obj = Option.gameObject;
@@ -70,6 +99,9 @@ internal sealed class OptionStringItem : OptionItem<int>
         SetOptionVisuals();
     }
 
+    /// <summary>
+    /// Sets up the specific behavior for the NumberOption component.
+    /// </summary>
     protected sealed override void SetupOptionBehavior()
     {
         if (Option is NumberOption numberOption)
@@ -84,22 +116,36 @@ internal sealed class OptionStringItem : OptionItem<int>
         }
     }
 
+    /// <summary>
+    /// Increases the string selection index.
+    /// </summary>
     private void Increase()
     {
         SetValue(Value + 1);
     }
 
+    /// <summary>
+    /// Decreases the string selection index.
+    /// </summary>
     private void Decrease()
     {
         SetValue(Value - 1);
     }
 
-    internal sealed override void SetValue(int newValue)
+    /// <summary>
+    /// Sets the string selection value, clamping it to the valid range.
+    /// </summary>
+    /// <param name="newValue">The new string index to set.</param>
+    public sealed override void SetValue(int newValue)
     {
         newValue = Math.Clamp(newValue, Range.min, Range.max);
         base.SetValue(newValue);
     }
 
+    /// <summary>
+    /// Updates the visual appearance of the string option based on its current value.
+    /// </summary>
+    /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal sealed override void UpdateVisuals(bool updateTabVisuals = true)
     {
         if (Option is NumberOption numberOption)
@@ -125,8 +171,17 @@ internal sealed class OptionStringItem : OptionItem<int>
         }
     }
 
-    internal sealed override string ValueAsString() => Translator.GetString(TranslatorStrings[Value], showInvalid: false);
-    internal sealed override int GetStringValue()
+    /// <summary>
+    /// Gets the translated string representation of the current selection.
+    /// </summary>
+    /// <returns>The translated string for the current index.</returns>
+    public sealed override string ValueAsString() => Translator.GetString(TranslatorStrings[Value], showInvalid: false);
+
+    /// <summary>
+    /// Gets the effective string value index, accounting for random selection.
+    /// </summary>
+    /// <returns>The actual string index (random if selected).</returns>
+    public sealed override int GetStringValue()
     {
         var value = GetValue();
         if (!CanBeRandom)
@@ -146,6 +201,17 @@ internal sealed class OptionStringItem : OptionItem<int>
         }
     }
 
-    internal sealed override bool Is(string @string) => TranslatorStrings[Value] == @string || ValueAsString() == @string;
-    internal sealed override bool Is(int @int) => !CanBeRandom ? Value == @int : Value == @int - 1;
+    /// <summary>
+    /// Checks if the option's string value matches a specific string.
+    /// </summary>
+    /// <param name="@string">The string value to compare against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    public sealed override bool Is(string @string) => TranslatorStrings[Value] == @string || ValueAsString() == @string;
+
+    /// <summary>
+    /// Checks if the option's index value matches a specific integer.
+    /// </summary>
+    /// <param name="@int">The integer value to compare against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    public sealed override bool Is(int @int) => !CanBeRandom ? Value == @int : Value == @int - 1;
 }

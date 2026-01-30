@@ -1,5 +1,8 @@
 namespace BetterAmongUs.Helpers;
 
+/// <summary>
+/// Represents a delayed task that executes after a specified time interval.
+/// </summary>
 internal sealed class LateTask
 {
     private readonly Action _action;
@@ -9,6 +12,13 @@ internal sealed class LateTask
 
     private static readonly List<LateTask> Tasks = new();
 
+    /// <summary>
+    /// Initializes a new instance of the LateTask class.
+    /// </summary>
+    /// <param name="action">The action to execute after the delay.</param>
+    /// <param name="delay">The delay in seconds before executing the action.</param>
+    /// <param name="name">The name of the task for logging purposes.</param>
+    /// <param name="shouldLog">Whether to log task completion.</param>
     private LateTask(Action action, float delay, string name = "Unnamed Task", bool shouldLog = true)
     {
         _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -19,6 +29,11 @@ internal sealed class LateTask
         Tasks.Add(this);
     }
 
+    /// <summary>
+    /// Updates the task timer and executes the action if the delay has elapsed.
+    /// </summary>
+    /// <param name="deltaTime">The time in seconds since the last update.</param>
+    /// <returns>True if the task has completed and should be removed, false otherwise.</returns>
     private bool Update(float deltaTime)
     {
         _remainingTime -= deltaTime;
@@ -44,11 +59,22 @@ internal sealed class LateTask
         }
     }
 
+    /// <summary>
+    /// Schedules a new delayed task.
+    /// </summary>
+    /// <param name="action">The action to execute after the delay.</param>
+    /// <param name="delay">The delay in seconds before executing the action.</param>
+    /// <param name="name">The name of the task for logging purposes.</param>
+    /// <param name="shouldLog">Whether to log task completion.</param>
     internal static void Schedule(Action action, float delay, string name = "Unnamed Task", bool shouldLog = true)
     {
         _ = new LateTask(action, delay, name, shouldLog);
     }
 
+    /// <summary>
+    /// Updates all scheduled tasks with the elapsed time.
+    /// </summary>
+    /// <param name="deltaTime">The time in seconds since the last update.</param>
     internal static void UpdateAll(float deltaTime)
     {
         if (Tasks.Count == 0)
@@ -70,10 +96,16 @@ internal sealed class LateTask
         }
     }
 
+    /// <summary>
+    /// Cancels and removes all scheduled tasks.
+    /// </summary>
     public static void CancelAll()
     {
         Tasks.Clear();
     }
 
+    /// <summary>
+    /// Gets the number of currently active tasks.
+    /// </summary>
     public static int ActiveTaskCount => Tasks.Count;
 }

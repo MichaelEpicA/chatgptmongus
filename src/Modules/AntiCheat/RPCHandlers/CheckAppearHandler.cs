@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using Hazel;
 
 namespace BetterAmongUs.Modules.AntiCheat;
@@ -12,7 +12,7 @@ internal sealed class CheckAppearHandler : RPCHandler
 
     internal override bool BetterHandle(PlayerControl? sender, MessageReader reader)
     {
-        bool flag = reader.ReadBoolean();
+        bool shouldAnimate = reader.ReadBoolean();
 
         if (sender.Is(RoleTypes.Phantom)
             && sender.IsAlive() && sender.IsImpostorTeam()
@@ -20,8 +20,9 @@ internal sealed class CheckAppearHandler : RPCHandler
             && !sender.onLadder
             && !sender.MyPhysics.Animations.IsPlayingAnyLadderAnimation())
         {
-            if (!sender.IsInVent() && flag == false)
+            if (!sender.IsInVent() && shouldAnimate == false)
             {
+                LogRpcInfo($"Phantom attempted to appear without animation while not in vent.");
                 return false;
             }
 
@@ -39,6 +40,7 @@ internal sealed class CheckAppearHandler : RPCHandler
     {
         if (!GameState.IsHost)
         {
+            LogRpcInfo($"Non-host attempted CheckAppear RPC.");
             return false;
         }
 

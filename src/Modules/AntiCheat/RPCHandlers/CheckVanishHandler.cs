@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using Hazel;
 
 namespace BetterAmongUs.Modules.AntiCheat;
@@ -27,6 +27,11 @@ internal sealed class CheckVanishHandler : RPCHandler
             }
             player.RpcVanish();
         }
+        else
+        {
+            string issue = GetVanishIssue(player);
+            LogRpcInfo($"Invalid vanish attempt: {issue}");
+        }
 
         return false;
     }
@@ -35,9 +40,23 @@ internal sealed class CheckVanishHandler : RPCHandler
     {
         if (!GameState.IsHost)
         {
+            LogRpcInfo($"Non-host attempted CheckVanish RPC");
             return false;
         }
 
         return true;
+    }
+
+    private static string GetVanishIssue(PlayerControl player)
+    {
+        if (!player.Is(RoleTypes.Phantom)) return "Player not Phantom role";
+        if (!player.IsAlive()) return "Player not alive";
+        if (!player.IsImpostorTeam()) return "Player not impostor team";
+        if (player.IsInVent()) return "Player in vent";
+        if (player.inMovingPlat) return "Player in moving platform";
+        if (player.onLadder) return "Player on ladder";
+        if (player.MyPhysics.Animations.IsPlayingAnyLadderAnimation()) return "Player in ladder animation";
+
+        return "Unknown vanish issue";
     }
 }

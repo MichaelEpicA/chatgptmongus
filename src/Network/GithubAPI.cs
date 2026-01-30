@@ -6,13 +6,36 @@ using UnityEngine.Networking;
 
 namespace BetterAmongUs.Network;
 
+/// <summary>
+/// Manages API connections to GitHub for news, updates, and user data.
+/// </summary>
 internal sealed class GithubAPI : MonoBehaviour
 {
+    /// <summary>
+    /// Gets the singleton instance of the GithubAPI.
+    /// </summary>
+    /// <value>The current instance, or null if not initialized.</value>
     internal static GithubAPI? Instance { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the API connection was successful.
+    /// </summary>
     internal static bool HasConnectedAPI { get; private set; } = false;
+
+    /// <summary>
+    /// Gets a value indicating whether the API connection process has finished.
+    /// </summary>
     internal static bool Finished { get; private set; } = false;
 
     private static bool hasTryConnect = false;
+
+    /// <summary>
+    /// Initializes and connects to the GitHub API.
+    /// </summary>
+    /// <remarks>
+    /// Creates a persistent GameObject to manage API connections.
+    /// This method ensures only one connection attempt is made.
+    /// </remarks>
     internal static void Connect()
     {
         if (hasTryConnect) return;
@@ -28,11 +51,12 @@ internal sealed class GithubAPI : MonoBehaviour
         ConnectToAPI();
     }
 
+    /// <summary>
+    /// Connects to various GitHub API endpoints.
+    /// </summary>
     [HideFromIl2Cpp]
     private void ConnectToAPI()
     {
-        ConnectToAPIUsers();
-
         var newsLoader = gameObject.AddComponent<NewsLoader>();
         this.StartCoroutine(newsLoader.CoFetchNewsData());
 
@@ -40,11 +64,11 @@ internal sealed class GithubAPI : MonoBehaviour
         this.StartCoroutine(updateLoader.CoFetchUpdateData());
     }
 
-    [HideFromIl2Cpp]
-    private void ConnectToAPIUsers()
-    {
-    }
-
+    /// <summary>
+    /// Sets the API connection status based on the web request result.
+    /// </summary>
+    /// <param name="www">The UnityWebRequest that was made.</param>
+    /// <param name="hasErrored">Whether an error occurred during the request.</param>
     internal static void SetConnectedAPI(UnityWebRequest www, bool hasErrored)
     {
         if (www.result == UnityWebRequest.Result.ConnectionError ||
@@ -58,6 +82,13 @@ internal sealed class GithubAPI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks if internet connectivity is available.
+    /// </summary>
+    /// <returns>True if internet connection is available; otherwise, false.</returns>
+    /// <remarks>
+    /// Performs a quick test by attempting to connect to Google's 204 endpoint.
+    /// </remarks>
     internal static bool IsInternetAvailable()
     {
         if (Application.internetReachability == NetworkReachability.NotReachable)

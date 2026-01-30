@@ -6,29 +6,20 @@ using Hazel;
 
 namespace BetterAmongUs.Network;
 
+/// <summary>
+/// Handles custom RPC (Remote Procedure Call) messages for BetterAmongUs.
+/// </summary>
 internal static class RPC
 {
-    internal static void RpcSetNameForTarget(PlayerControl player, string name, PlayerControl target)
-    {
-        if (!GameState.IsHost)
-        {
-            return;
-        }
-
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, target.GetClientId());
-        writer.Write(player.Data.NetId);
-        writer.Write(name);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
-    }
-
-    internal static void RpcExile(PlayerControl player)
-    {
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.Exiled, SendOption.Reliable, -1);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
-
-        player.Exiled();
-    }
-
+    /// <summary>
+    /// Processes custom RPC messages received from other players.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The ID of the RPC call.</param>
+    /// <param name="oldReader">The message reader containing the RPC data.</param>
+    /// <remarks>
+    /// Handles both defined custom RPCs and protects against unknown RPCs in modded lobbies.
+    /// </remarks>
     internal static void HandleCustomRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
         if (player == null || player.IsLocalPlayer() || player.Data == null || Enum.IsDefined(typeof(RpcCalls), callId)) return;
@@ -100,4 +91,3 @@ internal static class RPC
         }
     }
 }
-

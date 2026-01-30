@@ -1,7 +1,7 @@
 using AmongUs.Data;
+using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
 using BetterAmongUs.Helpers;
-using BetterAmongUs.Attributes;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using Hazel;
@@ -17,7 +17,6 @@ internal sealed class SendChatHandler : RPCHandler
     {
         var text = reader.ReadString();
 
-        // Check banned words
         if (BetterGameSettings.UseBanWordList.GetBool() && (!BetterGameSettings.UseBanWordListOnlyLobby.GetBool() || GameState.IsLobby))
         {
             if (TextFileHandler.CompareStringFilters(BetterDataManager.banWordListFile, text.Split(' ')))
@@ -33,8 +32,19 @@ internal sealed class SendChatHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{sender.IsAlive()} && {GameState.IsInGamePlay} && {!GameState.IsMeeting} && {!GameState.IsExilling} || {DataManager.Settings.Multiplayer.ChatMode == InnerNet.QuickChatModes.QuickChatOnly}");
+                string issue = GetChatIssue(sender);
+                LogRpcInfo($"Invalid chat attempt: {issue}");
             }
         }
+    }
+
+    private static string GetChatIssue(PlayerControl sender)
+    {
+        if (sender.IsAlive() && GameState.IsInGamePlay && !GameState.IsMeeting && !GameState.IsExilling)
+            return "Alive player chatting during gameplay";
+        if (DataManager.Settings.Multiplayer.ChatMode == InnerNet.QuickChatModes.QuickChatOnly)
+            return "Quick chat only mode";
+
+        return "Unknown chat issue";
     }
 }

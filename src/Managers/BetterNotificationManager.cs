@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace BetterAmongUs.Managers;
 
+/// <summary>
+/// Manages in-game notifications for BetterAmongUs, including cheat detection alerts and system messages.
+/// </summary>
 internal static class BetterNotificationManager
 {
     internal static GameObject? BAUNotificationManagerObj;
@@ -19,6 +22,11 @@ internal static class BetterNotificationManager
     private static Camera? localCamera;
     internal static bool Notifying = false;
 
+    /// <summary>
+    /// Displays a notification message in-game.
+    /// </summary>
+    /// <param name="text">The text to display in the notification.</param>
+    /// <param name="Time">The duration in seconds to show the notification.</param>
     internal static void Notify(string text, float Time = 5f)
     {
         if (!BAUPlugin.BetterNotifications.Value) return;
@@ -42,6 +50,15 @@ internal static class BetterNotificationManager
         }
     }
 
+    /// <summary>
+    /// Handles cheat detection notifications and actions.
+    /// </summary>
+    /// <param name="player">The player who was detected cheating.</param>
+    /// <param name="reason">The reason for the cheat detection.</param>
+    /// <param name="newText">Optional custom text to replace the default detection message.</param>
+    /// <param name="kickPlayer">Whether to kick the detected player.</param>
+    /// <param name="forceBan">Whether to force a ban regardless of settings.</param>
+    /// <returns>True if the cheat detection was handled, false otherwise.</returns>
     internal static bool NotifyCheat(PlayerControl player, string reason, string newText = "", bool kickPlayer = true, bool forceBan = false)
     {
         if (player.IsCheater() || player?.Data == null) return false;
@@ -97,7 +114,9 @@ internal static class BetterNotificationManager
         return true;
     }
 
-
+    /// <summary>
+    /// Updates the notification manager each frame.
+    /// </summary>
     internal static void Update()
     {
         if (BAUNotificationManagerObj != null)
@@ -134,6 +153,9 @@ internal static class BetterNotificationManager
         }
     }
 
+    /// <summary>
+    /// Checks and processes queued notifications.
+    /// </summary>
     private static void CheckNotifyQueue()
     {
         if (NotifyQueue.Any())

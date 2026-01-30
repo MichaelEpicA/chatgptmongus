@@ -11,7 +11,7 @@ internal static class IntroCutscenePatch
 {
     [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
     [HarmonyPostfix]
-    private static void ShowRole_MoveNext_Postfix(IntroCutscene __instance)
+    private static void IntroCutscene_CoBegin_Postfix(IntroCutscene __instance)
     {
         __instance.StartCoroutine(CoWaitForShowRole(__instance));
     }

@@ -4,6 +4,9 @@ using HarmonyLib;
 
 namespace BetterAmongUs.Managers;
 
+/// <summary>
+/// Manages lobby-specific behaviors for private lobbies
+/// </summary>
 [HarmonyPatch]
 internal static class PrivateOnlyLobbyManager
 {

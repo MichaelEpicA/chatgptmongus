@@ -15,11 +15,20 @@ using UnityEngine;
 
 namespace BetterAmongUs.Managers;
 
+/// <summary>
+/// Manages network communication, RPC handling, and anti-cheat measures for BetterAmongUs.
+/// </summary>
 internal static class NetworkManager
 {
+    /// <summary>
+    /// Gets the InnerNetClient instance from AmongUsClient.
+    /// </summary>
     internal static InnerNetClient? InnerNetClient => AmongUsClient.Instance;
 
-    // Send non-immediate RPC to game server
+    /// <summary>
+    /// Sends a message to the game server.
+    /// </summary>
+    /// <param name="writer">The MessageWriter containing the data to send.</param>
     internal static void SendToServer(MessageWriter writer)
     {
         try
@@ -47,7 +56,11 @@ internal static class NetworkManager
         }
     }
 
-    // Read non-immediate RPC
+    /// <summary>
+    /// Processes and forwards messages from a MessageWriter.
+    /// </summary>
+    /// <param name="writer">The MessageWriter containing messages to process.</param>
+    /// <param name="sendOption">The send option for the messages.</param>
     internal static void StreamlineMessage(MessageWriter writer, SendOption sendOption)
     {
         if (!InnerNetClient.InOnlineScene)
@@ -68,7 +81,11 @@ internal static class NetworkManager
         }
     }
 
-    // Read data from non-immediate RPC
+    /// <summary>
+    /// Reads data from a MessageReader and processes it based on the send option.
+    /// </summary>
+    /// <param name="reader">The MessageReader containing data to read.</param>
+    /// <param name="sendOption">The send option for the data.</param>
     internal static void ReadData(MessageReader reader, SendOption sendOption)
     {
         var typeFlag = reader.Tag;
@@ -93,7 +110,13 @@ internal static class NetworkManager
         }
     }
 
-    // Read rpc data from non-immediate RPC
+    /// <summary>
+    /// Reads RPC data from a MessageReader.
+    /// </summary>
+    /// <param name="reader">The MessageReader containing RPC data.</param>
+    /// <param name="flag">The message flag.</param>
+    /// <param name="targetId">The target client ID.</param>
+    /// <returns>An RPCData structure containing the parsed RPC information.</returns>
     internal static RPCData ReadRpc(MessageReader reader, byte flag, int targetId)
     {
         var netId = reader.ReadPackedUInt32();
@@ -102,7 +125,10 @@ internal static class NetworkManager
         return new RPCData(AmongUsClient.Instance.FindObjectByNetId<InnerNetObject>(netId), (SendOption)flag, targetId, (RpcCalls)calledId, reader);
     }
 
-    // Handle received rpcs from server
+    /// <summary>
+    /// Handles GameData messages from the server.
+    /// </summary>
+    /// <param name="parentReader">The MessageReader containing GameData messages.</param>
     public static void HandleGameData(MessageReader parentReader)
     {
         try
@@ -111,8 +137,8 @@ internal static class NetworkManager
             {
                 MessageReader messageReader = parentReader.ReadMessageAsNewBuffer();
                 int currentMessageNumber = InnerNetClient.msgNum++;
-                InnerNetClient.StartCoroutine(HandleGameDataInner(messageReader, currentMessageNumber));
                 var oldReader = MessageReader.Get(messageReader);
+                InnerNetClient.StartCoroutine(HandleGameDataInner(messageReader, currentMessageNumber));
                 RPCHandler.HandleRPC(parentReader.Tag, null, oldReader, HandlerFlag.HandleGameDataTag);
                 oldReader.Recycle();
             }
@@ -123,7 +149,12 @@ internal static class NetworkManager
         }
     }
 
-    // Handle rpc data
+    /// <summary>
+    /// Internal coroutine to handle different types of GameData messages.
+    /// </summary>
+    /// <param name="reader">The MessageReader containing the GameData.</param>
+    /// <param name="msgNum">The message number for tracking.</param>
+    /// <returns>An IEnumerator for the coroutine.</returns>
     private static IEnumerator HandleGameDataInner(MessageReader reader, int msgNum)
     {
         int attemptCount = 0;
@@ -168,6 +199,9 @@ internal static class NetworkManager
         yield break;
     }
 
+    /// <summary>
+    /// Handles object deserialization from a MessageReader.
+    /// </summary>
     private static IEnumerator HandleObjectDeserialization(MessageReader reader, int msgNum, int initialAttemptCount)
     {
         int attemptCount = initialAttemptCount;
@@ -207,6 +241,9 @@ internal static class NetworkManager
         }
     }
 
+    /// <summary>
+    /// Handles RPC calls from a MessageReader.
+    /// </summary>
     private static IEnumerator HandleRpcCall(MessageReader reader, int msgNum, int initialAttemptCount)
     {
         int attemptCount = initialAttemptCount;
@@ -272,6 +309,9 @@ internal static class NetworkManager
         }
     }
 
+    /// <summary>
+    /// Handles object destruction messages.
+    /// </summary>
     private static IEnumerator HandleObjectDestruction(MessageReader reader)
     {
         try
@@ -293,6 +333,9 @@ internal static class NetworkManager
         yield break;
     }
 
+    /// <summary>
+    /// Handles client ready status messages.
+    /// </summary>
     private static IEnumerator HandleClientReady(MessageReader reader)
     {
         try
@@ -310,6 +353,9 @@ internal static class NetworkManager
         yield break;
     }
 
+    /// <summary>
+    /// Handles scene change messages.
+    /// </summary>
     private static void HandleSceneChange(MessageReader reader)
     {
         int clientId = reader.ReadPackedInt32();
@@ -327,6 +373,9 @@ internal static class NetworkManager
         }
     }
 
+    /// <summary>
+    /// Handles Xbox XUID declaration messages (currently disabled).
+    /// </summary>
     private static IEnumerator HandleXboxDeclareXuid(MessageReader reader)
     {
         /*
@@ -347,12 +396,18 @@ internal static class NetworkManager
         yield break;
     }
 
+    /// <summary>
+    /// Handles invalid message tags.
+    /// </summary>
     private static void HandleInvalidTag(MessageReader reader)
     {
         Logger_.Warning($"Bad tag {reader.Tag} at {reader.Offset}+{reader.Position}={reader.Length}: " + string.Join(" ", reader.Buffer.Take(128)), "NetworkManager");
         reader.Recycle();
     }
 
+    /// <summary>
+    /// Handles InnerNetObject RPCs with anti-cheat checks.
+    /// </summary>
     private static bool HandleInnerNetObject(InnerNetObject netObj, byte callId, MessageReader reader)
     {
         if (netObj is PlayerControl player)
@@ -373,6 +428,9 @@ internal static class NetworkManager
         return true;
     }
 
+    /// <summary>
+    /// Processes RPCs for a player with anti-cheat validation.
+    /// </summary>
     private static bool PlayerRpc(PlayerControl player, byte callId, MessageReader reader)
     {
         if (player.BetterData() != null)
@@ -401,7 +459,7 @@ internal static class NetworkManager
     [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem), typeof(SystemTypes), typeof(PlayerControl), typeof(MessageReader))]
     internal static class MessageReaderUpdateSystemPatch
     {
-        internal static bool Prefix(/*ShipStatus __instance,*/ [HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] MessageReader reader)
+        internal static bool Prefix([HarmonyArgument(0)] SystemTypes systemType, [HarmonyArgument(1)] PlayerControl player, [HarmonyArgument(2)] MessageReader reader)
         {
             player.BetterData().AntiCheatInfo.RPCSentPS++;
             if (player.BetterData().AntiCheatInfo.RPCSentPS >= ExtendedAntiCheatInfo.MAX_RPC_SENT)

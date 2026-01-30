@@ -1,14 +1,17 @@
 ﻿namespace BetterAmongUs.Helpers;
 
+/// <summary>
+/// Provides extension methods for shuffling collections.
+/// </summary>
 internal static class ShuffleListExtension
 {
     /// <summary>
-    /// Shuffles all elements in a collection randomly
+    /// Shuffles all elements in a collection randomly using the Fisher-Yates algorithm.
     /// </summary>
-    /// <typeparam name="T">The type of the collection</typeparam>
-    /// <param name="collection">The collection to be shuffled</param>
-    /// <param name="random">An instance of a randomizer algorithm</param>
-    /// <returns>The shuffled collection</returns>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <param name="collection">The collection to be shuffled.</param>
+    /// <param name="random">An instance of a randomizer algorithm.</param>
+    /// <returns>The shuffled collection.</returns>
     internal static IEnumerable<T> Shuffle<T>(this IEnumerable<T> collection, Random random)
     {
         var list = collection.ToList();

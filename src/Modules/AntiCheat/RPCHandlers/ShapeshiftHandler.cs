@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using Hazel;
 using InnerNet;
@@ -21,7 +21,8 @@ internal sealed class ShapeshiftHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{!sender.Is(RoleTypes.Shapeshifter)} || {!sender.IsAlive()}");
+                string issue = GetShapeshiftRoleIssue(sender);
+                LogRpcInfo($"Invalid shapeshift: {issue}");
             }
             return false;
         }
@@ -29,11 +30,19 @@ internal sealed class ShapeshiftHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{!flag} && {!GameState.IsMeeting} && {!GameState.IsExilling} && {!sender.IsInVent()}");
+                LogRpcInfo($"Shapeshifter attempted to shapeshift without animation while not in vent");
             }
             return false;
         }
 
         return true;
+    }
+
+    private static string GetShapeshiftRoleIssue(PlayerControl sender)
+    {
+        if (!sender.Is(RoleTypes.Shapeshifter)) return "Sender not Shapeshifter role";
+        if (!sender.IsAlive()) return "Sender not alive";
+
+        return "Unknown shapeshift role issue";
     }
 }

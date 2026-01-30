@@ -8,10 +8,25 @@ using UnityEngine;
 
 namespace BetterAmongUs.Network.Loaders;
 
+/// <summary>
+/// Handles downloading and processing of update data from a remote repository.
+/// </summary>
 internal sealed class UpdateLoader : MonoBehaviour
 {
+    /// <summary>
+    /// Gets the update information retrieved from the remote repository.
+    /// </summary>
+    /// <value>The update data, or null if not loaded.</value>
     internal static UpdateData? UpdateInfo { get; private set; }
 
+    /// <summary>
+    /// Coroutine to fetch update data from the remote repository.
+    /// </summary>
+    /// <returns>IEnumerator for coroutine execution.</returns>
+    /// <remarks>
+    /// If no internet connection is detected, it retries several times before giving up.
+    /// After successfully loading update data, it initializes the UpdateManager.
+    /// </remarks>
     [HideFromIl2Cpp]
     internal IEnumerator CoFetchUpdateData()
     {

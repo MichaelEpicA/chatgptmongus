@@ -7,9 +7,19 @@ using UnityEngine;
 
 namespace BetterAmongUs.Mono;
 
+/// <summary>
+/// Extends PlayerControl with additional functionality.
+/// </summary>
 internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<PlayerControl>
 {
+    /// <summary>
+    /// Gets or sets the base PlayerControl instance.
+    /// </summary>
     public PlayerControl? BaseMono { get; set; }
+
+    /// <summary>
+    /// Gets the PlayerControl instance.
+    /// </summary>
     internal PlayerControl? _Player => BaseMono;
 
     private void Awake()
@@ -19,6 +29,10 @@ internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<Play
         _Player.gameObject.AddComponent<PlayerInfoDisplay>().Init(_Player);
     }
 
+    /// <summary>
+    /// Coroutine to add extended player data.
+    /// </summary>
+    /// <returns>IEnumerator for coroutine.</returns>
     [HideFromIl2Cpp]
     private IEnumerator CoAddBetterData()
     {
@@ -30,6 +44,10 @@ internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<Play
         TryCreateExtendedData(_Player.Data);
     }
 
+    /// <summary>
+    /// Attempts to create extended data for a player.
+    /// </summary>
+    /// <param name="data">The player data to extend.</param>
     internal static void TryCreateExtendedData(NetworkedPlayerInfo data)
     {
         if (data.BetterData() == null)
@@ -44,9 +62,15 @@ internal sealed class ExtendedPlayerControl : MonoBehaviour, IMonoExtension<Play
         this.UnregisterExtension();
     }
 
+    /// <summary>
+    /// Dictionary storing last name set for each player.
+    /// </summary>
     internal readonly Dictionary<NetworkedPlayerInfo, string> NameSetLastFor = [];
 }
 
+/// <summary>
+/// Extension methods for PlayerControl.
+/// </summary>
 internal static class PlayerControlExtension
 {
     [HarmonyPatch(typeof(PlayerControl))]
@@ -59,6 +83,10 @@ internal static class PlayerControlExtension
             TryCreateExtendedPlayerControl(__instance);
         }
 
+        /// <summary>
+        /// Creates extended player control if it doesn't exist.
+        /// </summary>
+        /// <param name="pc">The PlayerControl instance.</param>
         internal static void TryCreateExtendedPlayerControl(PlayerControl pc)
         {
             if (pc.BetterPlayerControl() == null)
@@ -68,11 +96,21 @@ internal static class PlayerControlExtension
         }
     }
 
+    /// <summary>
+    /// Gets the extended player control for a PlayerControl.
+    /// </summary>
+    /// <param name="player">The PlayerControl instance.</param>
+    /// <returns>The ExtendedPlayerControl, or null if not found.</returns>
     internal static ExtendedPlayerControl? BetterPlayerControl(this PlayerControl player)
     {
         return MonoExtensionManager.Get<ExtendedPlayerControl>(player);
     }
 
+    /// <summary>
+    /// Gets the extended player control for a PlayerPhysics.
+    /// </summary>
+    /// <param name="playerPhysics">The PlayerPhysics instance.</param>
+    /// <returns>The ExtendedPlayerControl, or null if not found.</returns>
     internal static ExtendedPlayerControl? BetterPlayerControl(this PlayerPhysics playerPhysics)
     {
         return MonoExtensionManager.Get<ExtendedPlayerControl>(playerPhysics.myPlayer);

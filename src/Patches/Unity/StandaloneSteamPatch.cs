@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using System.Reflection;
 
-namespace BetterAmongUs.Patches.Client;
+namespace BetterAmongUs.Patches.Unity;
 
 [HarmonyPatch]
 internal static class StandaloneSteamPatch

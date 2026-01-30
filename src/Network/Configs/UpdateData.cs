@@ -1,4 +1,5 @@
-﻿using BetterAmongUs.Helpers;
+﻿using BetterAmongUs.Enums;
+using BetterAmongUs.Helpers;
 using System.Collections;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -6,27 +7,56 @@ using UnityEngine;
 
 namespace BetterAmongUs.Network.Configs;
 
+/// <summary>
+/// Represents update data retrieved from the remote repository.
+/// </summary>
 [Serializable]
 internal sealed class UpdateData
 {
+    /// <summary>
+    /// Gets or sets the download link for the updated DLL file.
+    /// </summary>
     [JsonPropertyName("dllLink")]
     public string DllLink { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the version string of the update.
+    /// </summary>
     [JsonPropertyName("version")]
     public string Version { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the release type as an integer value.
+    /// </summary>
     [JsonPropertyName("releaseType")]
     public int ReleaseType { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether this update is a hotfix.
+    /// </summary>
     [JsonPropertyName("isHotfix")]
     public bool IsHotfix { get; set; }
 
+    /// <summary>
+    /// Gets or sets the hotfix number if this is a hotfix update.
+    /// </summary>
     [JsonPropertyName("hotfixNumber")]
     public int HotfixNumber { get; set; }
 
+    /// <summary>
+    /// Gets or sets the beta number if this is a beta release.
+    /// </summary>
     [JsonPropertyName("betaNumber")]
     public int BetaNumber { get; set; }
 
+    /// <summary>
+    /// Determines if this update is newer than the currently installed version.
+    /// </summary>
+    /// <returns>True if the update is newer, false otherwise.</returns>
+    /// <remarks>
+    /// Compares version numbers, release types, and specific build numbers
+    /// to determine if an update should be applied.
+    /// </remarks>
     internal bool IsNewUpdate()
     {
         try
@@ -79,6 +109,14 @@ internal sealed class UpdateData
         }
     }
 
+    /// <summary>
+    /// Downloads and applies the update.
+    /// </summary>
+    /// <returns>IEnumerator for coroutine execution.</returns>
+    /// <remarks>
+    /// Downloads the new DLL file, renames the current DLL to .old,
+    /// and replaces it with the downloaded file.
+    /// </remarks>
     internal IEnumerator CoDownload()
     {
         int count = 0;
@@ -110,6 +148,10 @@ internal sealed class UpdateData
         yield break;
     }
 
+    /// <summary>
+    /// Returns a string representation of the update data.
+    /// </summary>
+    /// <returns>A formatted string containing version information.</returns>
     public override string ToString()
     {
         return $"{Version}:{ReleaseType}:{BetaNumber}:{HotfixNumber}";

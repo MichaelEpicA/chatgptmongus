@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using Hazel;
 
@@ -17,7 +17,7 @@ internal sealed class EnterVentHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{sender.IsImpostorTeam()} && {!sender.Is(RoleTypes.Engineer)}");
+                LogRpcInfo($"Non-impostor and non-engineer attempted EnterVent RPC");
             }
         }
     }

@@ -6,9 +6,9 @@ using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using HarmonyLib;
 using Hazel;
 
-namespace BetterAmongUs.Patches.Managers;
+namespace BetterAmongUs.Patches.Gameplay.Managers;
 
-[HarmonyPatch(typeof(RoleManager))]
+[HarmonyPatch]
 internal static class RoleManagerPatch
 {
     internal static Dictionary<string, int> ImpostorMultiplier = []; // HashPuid, Multiplier
@@ -19,9 +19,9 @@ internal static class RoleManagerPatch
         return clientData?.BetterData()?.IsVerifiedBetterUser != true;
     };
 
-    [HarmonyPatch(nameof(RoleManager.SetRole))]
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SetRole))]
     [HarmonyPrefix]
-    private static void RoleManager_Prefix(RoleManager __instance, PlayerControl targetPlayer, RoleTypes roleType)
+    private static void RoleManager_SetRole_Prefix(RoleManager __instance, PlayerControl targetPlayer, RoleTypes roleType)
     {
         if (RoleManager.IsGhostRole(roleType))
         {
@@ -33,9 +33,9 @@ internal static class RoleManagerPatch
     }
 
     // Better role algorithm
-    [HarmonyPatch(nameof(RoleManager.SelectRoles))]
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SelectRoles))]
     [HarmonyPrefix]
-    private static bool SelectRoles_Prefix(/*RoleManager __instance*/)
+    private static bool RoleManager_SelectRoles_Prefix()
     {
         if (!GameState.IsHideNSeek)
         {
@@ -289,9 +289,9 @@ internal static class RoleManagerPatch
         Logger_.LogHeader($"Better Role Assignment Has Finished", "RoleManager");
     }
 
-    [HarmonyPatch(nameof(RoleManager.AssignRoleOnDeath))]
+    [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRoleOnDeath))]
     [HarmonyPrefix]
-    internal static bool AssignRoleOnDeath_Prefix(/*RoleManager __instance*/ [HarmonyArgument(0)] PlayerControl player)
+    internal static bool RoleManager_AssignRoleOnDeath_Prefix(PlayerControl player)
     {
         Dictionary<RoleTypes, int> GhostRoles = new() // Role, Amount
         {
@@ -344,7 +344,7 @@ internal static class RoleManagerPatch
         return false;
     }
 
-    private static bool IsImpostorRole(RoleTypes role) => role is RoleTypes.Impostor or RoleTypes.Shapeshifter or RoleTypes.Phantom or RoleTypes.Viper;
+    private static bool IsImpostorRole(RoleTypes role) => role.GetBehaviour().IsImpostor;
 
     internal static int RNG()
     {

@@ -22,8 +22,7 @@ internal sealed class StartAppearHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{!shouldAnimate} && ({!sender.IsInVent()} && {!GameState.IsMeeting} && {!GameState.IsExilling})");
-
+                LogRpcInfo($"Phantom attempted to appear without animation while not in vent");
                 sender.HandleServerAppear(true);
             }
 

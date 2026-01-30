@@ -1,5 +1,5 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Mono;
 using Hazel;
@@ -13,7 +13,11 @@ internal sealed class CheckNameHandler : RPCHandler
 
     internal override bool HandleAntiCheatCancel(PlayerControl? sender, MessageReader reader)
     {
-        if (!GameState.IsHost) return false;
+        if (!GameState.IsHost)
+        {
+            LogRpcInfo($"Non-host attempted CheckName RPC");
+            return false;
+        }
 
         var name = reader.ReadString();
 

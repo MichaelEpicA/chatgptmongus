@@ -3,12 +3,12 @@ using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;
 
-[HarmonyPatch(typeof(ReportReasonScreen))]
+[HarmonyPatch]
 internal static class ReportReasonScreenPatch
 {
-    [HarmonyPatch(nameof(ReportReasonScreen.Show))]
+    [HarmonyPatch(typeof(ReportReasonScreen), nameof(ReportReasonScreen.Show))]
     [HarmonyPrefix]
-    private static void Show_Prefix(ref string playerName)
+    private static void ReportReasonScreen_Show_Prefix(ref string playerName)
     {
         if (Utils.IsHtmlText(playerName))
         {

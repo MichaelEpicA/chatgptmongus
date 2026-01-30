@@ -1,5 +1,6 @@
 ﻿using AmongUs.GameOptions;
 using BetterAmongUs.Helpers;
+using BetterAmongUs.Interfaces;
 using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Replay.Events;

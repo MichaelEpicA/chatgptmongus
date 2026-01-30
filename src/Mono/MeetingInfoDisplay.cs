@@ -10,6 +10,9 @@ using UnityEngine;
 
 namespace BetterAmongUs.Mono;
 
+/// <summary>
+/// Displays extended player information during meetings.
+/// </summary>
 internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
 {
     private PlayerVoteArea? _pva;
@@ -25,7 +28,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
 
     private CachedTranslations _cachedTranslations = new();
 
-    // Cached translations
+    /// <summary>
+    /// Cached translations for performance optimization.
+    /// </summary>
     private class CachedTranslations
     {
         internal readonly string SickoUser = Translator.GetString("Player.SickoUser");
@@ -40,6 +45,11 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         internal readonly string DisconnectDefault = Translator.GetString("DisconnectReasonMeeting.Disconnect");
     }
 
+    /// <summary>
+    /// Initializes the meeting info display.
+    /// </summary>
+    /// <param name="player">The player to display info for.</param>
+    /// <param name="pva">The PlayerVoteArea associated with the player.</param>
     internal void Init(PlayerControl? player, PlayerVoteArea pva)
     {
         _player = player;
@@ -70,6 +80,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         PlayerLevel.transform.position += new Vector3(0.23f, 0f);
     }
 
+    /// <summary>
+    /// LateUpdate override with cooldown for performance optimization.
+    /// </summary>
     protected override void LateUpdate()
     {
         if (Time.frameCount - _lastUpdateFrame < UPDATE_COOLDOWN)
@@ -95,6 +108,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         _lastUpdateFrame = Time.frameCount;
     }
 
+    /// <summary>
+    /// Updates the text positions based on content presence.
+    /// </summary>
     private void UpdateTextPositions()
     {
         bool hasInfoText = !string.IsNullOrEmpty(_infoText?.text);
@@ -120,6 +136,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         }
     }
 
+    /// <summary>
+    /// Updates player information display.
+    /// </summary>
     private void UpdateInfo()
     {
         if (_player?.Data == null || _player.BetterData() == null) return;
@@ -134,6 +153,10 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         UpdateTextIfChanged(_topText, roleText, ref _lastTopText);
     }
 
+    /// <summary>
+    /// Sets player tags based on data from BetterDataManager.
+    /// </summary>
+    /// <param name="sbTag">StringBuilder for tag text.</param>
     [HideFromIl2Cpp]
     private void SetPlayerTags(StringBuilder sbTag)
     {
@@ -149,6 +172,11 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
             sbTag.Append($"<color=#fc0000>{_cachedTranslations.KnownCheater}</color>+++");
     }
 
+    /// <summary>
+    /// Formats player information tags into a readable string.
+    /// </summary>
+    /// <param name="sbTag">StringBuilder containing tags.</param>
+    /// <param name="sbInfo">StringBuilder for formatted info.</param>
     [HideFromIl2Cpp]
     private static void FormatPlayerInfo(StringBuilder sbTag, StringBuilder sbInfo)
     {
@@ -170,6 +198,10 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         }
     }
 
+    /// <summary>
+    /// Gets the role text for display.
+    /// </summary>
+    /// <returns>Formatted role text.</returns>
     private string GetRoleText()
     {
         if (_player == null) return string.Empty;
@@ -198,6 +230,11 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         return role;
     }
 
+    /// <summary>
+    /// Updates name text position based on role and info text presence.
+    /// </summary>
+    /// <param name="roleText">The role text.</param>
+    /// <param name="infoText">The info text.</param>
     private void UpdateNameTextPosition(string roleText, string infoText)
     {
         bool hasRole = !string.IsNullOrEmpty(roleText);
@@ -212,6 +249,12 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         _pva.NameText.transform.localPosition = textPos;
     }
 
+    /// <summary>
+    /// Updates text if changed, optimizing performance.
+    /// </summary>
+    /// <param name="textMesh">TextMeshPro component to update.</param>
+    /// <param name="newText">New text to set.</param>
+    /// <param name="lastValue">Reference to last value for comparison.</param>
     private static void UpdateTextIfChanged(TextMeshPro textMesh, string newText, ref string lastValue)
     {
         if (textMesh == null) return;
@@ -223,6 +266,12 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         }
     }
 
+    /// <summary>
+    /// Checks if player data exists in a HashSet of UserInfo.
+    /// </summary>
+    /// <param name="dataList">HashSet of UserInfo to check.</param>
+    /// <param name="playerData">Player data to look for.</param>
+    /// <returns>True if player data exists in the HashSet.</returns>
     private static bool ContainsPlayerData(HashSet<UserInfo> dataList, NetworkedPlayerInfo playerData)
     {
         foreach (var info in dataList)
@@ -233,6 +282,9 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         return false;
     }
 
+    /// <summary>
+    /// Updates display for disconnected players.
+    /// </summary>
     private void UpdateDisconnect()
     {
         string disconnectText = GetDisconnectText();
@@ -255,6 +307,10 @@ internal sealed class MeetingInfoDisplay : PlayerInfoDisplay
         _pva.SetDisabled();
     }
 
+    /// <summary>
+    /// Gets disconnect reason text for display.
+    /// </summary>
+    /// <returns>Disconnect reason text.</returns>
     private string GetDisconnectText()
     {
         var playerData = GameData.Instance.GetPlayerById(_pva.TargetPlayerId);

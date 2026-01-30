@@ -1,7 +1,19 @@
 ﻿namespace BetterAmongUs.Modules.OptionItems;
 
-internal sealed class OptionPercentItem : OptionFloatItem
+/// <summary>
+/// Represents a percentage option item that displays values from 0% to 100% with color coding.
+/// </summary>
+public sealed class OptionPercentItem : OptionFloatItem
 {
+    /// <summary>
+    /// Creates a new percentage option item or returns an existing one with the same ID.
+    /// </summary>
+    /// <param name="id">The unique identifier for this option.</param>
+    /// <param name="tab">The tab this option belongs to.</param>
+    /// <param name="tranStr">The translation key for the option name.</param>
+    /// <param name="defaultValue">The default percentage value (0-100).</param>
+    /// <param name="parent">Optional parent option for hierarchical organization.</param>
+    /// <returns>A new or existing OptionPercentItem instance.</returns>
     internal static OptionPercentItem Create(int id, OptionTab tab, string tranStr, float defaultValue, OptionItem? parent = null)
     {
         if (GetOptionById(id) is OptionPercentItem floatItem)
@@ -11,7 +23,7 @@ internal sealed class OptionPercentItem : OptionFloatItem
         }
 
         OptionPercentItem Item = new();
-        AllTBROptions.Add(Item);
+        AllOptions.Add(Item);
         Item._id = id;
         Item.Tab = tab;
         Item.Translation = tranStr;
@@ -30,22 +42,31 @@ internal sealed class OptionPercentItem : OptionFloatItem
         return Item;
     }
 
-    internal sealed override string ValueAsString() => $"<color={GetColor(Value)}>{Value}%</color>";
+    /// <summary>
+    /// Gets the string representation of the percentage value with color coding.
+    /// </summary>
+    /// <returns>A colored string showing the percentage (e.g., "75%").</returns>
+    public sealed override string ValueAsString() => $"<color={GetColor(Value)}>{Value}%</color>";
 
+    /// <summary>
+    /// Gets the color code for a percentage value based on its magnitude.
+    /// </summary>
+    /// <param name="num">The percentage value (0-100).</param>
+    /// <returns>A hex color code string representing the value range.</returns>
     internal string GetColor(float num)
     {
         switch (num)
         {
             case float n when n <= 0f:
-                return "#ff0600";
+                return "#ff0600"; // Red
             case float n when n <= 25f:
-                return "#ff9d00";
+                return "#ff9d00"; // Orange
             case float n when n <= 50f:
-                return "#fff900";
+                return "#fff900"; // Yellow
             case float n when n <= 75f:
-                return "#80ff00";
+                return "#80ff00"; // Light Green
             default:
-                return "#80ff00";
+                return "#80ff00"; // Green (76-100%)
         }
     }
 }

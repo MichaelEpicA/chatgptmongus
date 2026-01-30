@@ -1,28 +1,90 @@
-﻿using System.Reflection;
+﻿using BetterAmongUs.Enums;
+using System.Reflection;
 
 namespace BetterAmongUs;
 
+/// <summary>
+/// Contains metadata and constants for the BetterAmongUs mod.
+/// </summary>
 internal static class ModInfo
 {
+    /// <summary>
+    /// Gets the release type of the current build.
+    /// </summary>
     internal static readonly ReleaseTypes ReleaseBuildType = ReleaseTypes.Release;
+
+    /// <summary>
+    /// Gets the Git commit hash from assembly metadata.
+    /// </summary>
     public static string CommitHash = GetAssemblyMetadata("CommitHash");
+
+    /// <summary>
+    /// Gets the build date from assembly metadata.
+    /// </summary>
     public static string BuildDate = GetAssemblyMetadata("BuildDate");
 
+    /// <summary>
+    /// The beta number for beta releases.
+    /// </summary>
     internal const string BETA_NUM = "0";
+
+    /// <summary>
+    /// The hotfix number for hotfix releases.
+    /// </summary>
     internal const string HOTFIX_NUM = "0";
+
+    /// <summary>
+    /// Indicates whether this is a hotfix release.
+    /// </summary>
     internal const bool IS_HOTFIX = false;
+
+    /// <summary>
+    /// The name of BAU.
+    /// </summary>
     internal const string PLUGIN_NAME = "BetterAmongUs";
+
+    /// <summary>
+    /// The GUID (Globally Unique Identifier) of BAU.
+    /// </summary>
     internal const string PLUGIN_GUID = "com.d1gq.betteramongus";
-    internal const string PLUGIN_VERSION = "1.3.1";
+
+    /// <summary>
+    /// The version of BAU.
+    /// </summary>
+    internal const string PLUGIN_VERSION = "1.3.2";
+
+    /// <summary>
+    /// The GitHub repository URL for BAU.
+    /// </summary>
     internal const string GITHUB = "https://github.com/D1GQ/BetterAmongUs";
+
+    /// <summary>
+    /// The Discord invite URL for BAU.
+    /// </summary>
     internal const string DISCORD = "https://discord.gg/vjYrXpzNAn";
 
+    /// <summary>
+    /// Retrieves metadata from the assembly attributes.
+    /// </summary>
+    /// <param name="key">The metadata key to retrieve.</param>
+    /// <returns>The metadata value, or an empty string if not found.</returns>
     private static string GetAssemblyMetadata(string key)
     {
         var attribute = Assembly.GetExecutingAssembly()
             .GetCustomAttributes<AssemblyMetadataAttribute>()
             .FirstOrDefault(a => a.Key == key);
 
-        return attribute?.Value ?? "unknown";
+        return attribute?.Value ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Contains constants for Among Us.
+    /// </summary>
+    internal static class AmongUs
+    {
+        /// <summary>
+        /// The process name of the Among Us executable.
+        /// </summary>
+        internal const string PROCESS_NAME = "Among Us.exe";
     }
 }

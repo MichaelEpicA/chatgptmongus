@@ -1,5 +1,5 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Mono;
 using Hazel;
@@ -24,7 +24,7 @@ internal sealed class SetNameHandler : RPCHandler
             {
                 Utils.AddChatPrivate($"{sender.GetPlayerNameAndColor()} Has tried to change their name to '{name}' but has been undone!");
                 Logger_.LogCheat($"{sender.BetterData().RealName} Has tried to change their name to '{name}' but has been undone!");
-                LogRpcInfo($"{sender.DataIsCollected() == true} && {!GameState.IsLocalGame} && {GameState.IsVanillaServer}");
+                LogRpcInfo($"Player attempted to change name multiple times: '{name}'");
             }
 
             return false;

@@ -3,8 +3,17 @@ using System.Text.RegularExpressions;
 
 namespace BetterAmongUs.Modules;
 
+/// <summary>
+/// Provides utilities for handling text files, including filtering, parsing, and formatting.
+/// </summary>
 internal static class TextFileHandler
 {
+    /// <summary>
+    /// Compares strings against filter patterns in a file using wildcard matching.
+    /// </summary>
+    /// <param name="filePath">Path to the filter file.</param>
+    /// <param name="strings">Array of strings to check against filters.</param>
+    /// <returns>True if any string matches a filter pattern, false otherwise.</returns>
     internal static bool CompareStringFilters(string filePath, string[] strings)
     {
         foreach (var content in ReadContents(filePath))
@@ -21,6 +30,12 @@ internal static class TextFileHandler
         return false;
     }
 
+    /// <summary>
+    /// Compares strings for exact matches with content in a file.
+    /// </summary>
+    /// <param name="filePath">Path to the file containing match strings.</param>
+    /// <param name="strings">Array of strings to check for exact matches.</param>
+    /// <returns>True if any string exactly matches content in the file, false otherwise.</returns>
     internal static bool CompareStringMatch(string filePath, string[] strings)
     {
         var stringSet = new HashSet<string>(
@@ -41,12 +56,19 @@ internal static class TextFileHandler
         return false;
     }
 
+    /// <summary>
+    /// Reads and parses content from a file, ignoring comments and empty lines.
+    /// </summary>
+    /// <param name="filePath">Path to the file to read.</param>
+    /// <returns>Enumerable collection of trimmed, non-empty content strings.</returns>
     private static IEnumerable<string> ReadContents(string filePath)
     {
         if (File.Exists(filePath))
         {
             return File.ReadLines(filePath)
-                       .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("//"))
+                       .Where(line => !string.IsNullOrWhiteSpace(line) &&
+                              !line.StartsWith("//") &&
+                              !line.StartsWith("#"))
                        .SelectMany(line => line.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                                .Select(s => s.Trim()));
         }
@@ -54,6 +76,12 @@ internal static class TextFileHandler
         return [];
     }
 
+    /// <summary>
+    /// Checks if a text matches a filter pattern with wildcard support.
+    /// </summary>
+    /// <param name="filter">The filter pattern (supports ** wildcards).</param>
+    /// <param name="text">The text to check.</param>
+    /// <returns>True if the text matches the filter pattern, false otherwise.</returns>
     private static bool CheckFilterString(string filter, string text)
     {
         string pattern = filter switch
@@ -67,6 +95,11 @@ internal static class TextFileHandler
         return Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 
+    /// <summary>
+    /// Parses a YAML-like string into a dictionary of key-value pairs.
+    /// </summary>
+    /// <param name="input">The YAML string to parse.</param>
+    /// <returns>Dictionary containing parsed key-value pairs.</returns>
     internal static Dictionary<string, string> ParseYaml(string input)
     {
         var result = new Dictionary<string, string>();
@@ -125,6 +158,12 @@ internal static class TextFileHandler
         return result;
     }
 
+    /// <summary>
+    /// Determines if a line represents a YAML key-value pair.
+    /// </summary>
+    /// <param name="line">The line to check.</param>
+    /// <param name="separatorIndex">Index of the colon separator.</param>
+    /// <returns>True if the line is a valid key-value pair, false otherwise.</returns>
     private static bool IsKeyValueLine(string line, int separatorIndex)
     {
         string keyPart = line[..separatorIndex].Trim();
@@ -136,6 +175,11 @@ internal static class TextFileHandler
         return true;
     }
 
+    /// <summary>
+    /// Converts markdown-like syntax to Unity rich text format.
+    /// </summary>
+    /// <param name="text">The text to format.</param>
+    /// <returns>The text formatted with Unity rich text tags.</returns>
     internal static string FormatToRichText(string text)
     {
         if (string.IsNullOrEmpty(text))
@@ -153,6 +197,9 @@ internal static class TextFileHandler
         return text;
     }
 
+    /// <summary>
+    /// Processes markdown headers (# through ######) to Unity size tags.
+    /// </summary>
     private static string ProcessHeaders(string text)
     {
         var headerSizes = new Dictionary<int, int>
@@ -170,16 +217,25 @@ internal static class TextFileHandler
         return text;
     }
 
+    /// <summary>
+    /// Processes block quotes (>) to styled text.
+    /// </summary>
     private static string ProcessBlockQuotes(string text)
     {
         return Regex.Replace(text, @"^>\s+(.+?)(?=\n|$)", "<color=#888888><i>│ $1</i></color>", RegexOptions.Multiline);
     }
 
+    /// <summary>
+    /// Processes horizontal rules (---, ***, ___) to Unicode line characters.
+    /// </summary>
     private static string ProcessHorizontalRules(string text)
     {
         return Regex.Replace(text, @"^\s*([-*_]){3,}\s*$", "───────────────────────────", RegexOptions.Multiline);
     }
 
+    /// <summary>
+    /// Processes bold (**), italic (*), and bold-italic (***) markdown.
+    /// </summary>
     private static string ProcessBoldAndItalic(string text)
     {
         text = Regex.Replace(text, @"(\*\*|__)(?![*\s])(.*?)(?<![*\s])\1", "<b>$2</b>");
@@ -189,22 +245,34 @@ internal static class TextFileHandler
         return text;
     }
 
+    /// <summary>
+    /// Processes strikethrough (~~) markdown.
+    /// </summary>
     private static string ProcessStrikethrough(string text)
     {
         return Regex.Replace(text, @"~~(.+?)~~", "<s>$1</s>");
     }
 
+    /// <summary>
+    /// Processes markdown links ([text](url)) to Unity link tags.
+    /// </summary>
     private static string ProcessLinks(string text)
     {
         return Regex.Replace(text, @"\[([^\]]+)\]\(([^)]+)\)",
             "<link=\"$2\"> <b>$1</b></link> ");
     }
 
+    /// <summary>
+    /// Processes inline code (`code`) to styled text.
+    /// </summary>
     private static string ProcessInlineCode(string text)
     {
         return Regex.Replace(text, @"`([^`]+)`", "<color=#FF8C00><size=85%>$1</size></color>");
     }
 
+    /// <summary>
+    /// Normalizes line breaks for better text flow.
+    /// </summary>
     private static string ProcessLineBreaks(string text)
     {
         return Regex.Replace(text, @"\n\s*\n", "\n\n");

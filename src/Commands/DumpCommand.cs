@@ -1,5 +1,5 @@
-﻿using BetterAmongUs.Data;
-using BetterAmongUs.Attributes;
+﻿using BetterAmongUs.Attributes;
+using BetterAmongUs.Data;
 using BetterAmongUs.Modules;
 
 namespace BetterAmongUs.Commands;
@@ -9,7 +9,17 @@ internal sealed class DumpCommand : BaseCommand
 {
     internal override string Name => "dump";
     internal override string Description => "Dump the entire log to the user's desktop";
-    internal override bool ShowCommand() => !GameState.IsInGamePlay;
+
+    internal override bool CanRunCommand(out string reason)
+    {
+        if (GameState.IsInGamePlay)
+        {
+            reason = "Only can run in lobby";
+            return false;
+        }
+
+        return base.CanRunCommand(out reason);
+    }
 
     internal override void Run()
     {

@@ -14,6 +14,9 @@ using UnityEngine;
 
 namespace BetterAmongUs.Mono;
 
+/// <summary>
+/// Displays extended player information during gameplay.
+/// </summary>
 internal class PlayerInfoDisplay : MonoBehaviour
 {
     protected PlayerControl? _player;
@@ -29,12 +32,16 @@ internal class PlayerInfoDisplay : MonoBehaviour
     private int _lastUpdateFrame;
     private const int UPDATE_COOLDOWN = 10;
 
-    // Cached regex patterns
+    /// <summary>
+    /// Cached regex pattern for friend code validation.
+    /// </summary>
     private static readonly Regex _friendCodePattern = new(@"^[a-zA-Z0-9#]+$", RegexOptions.Compiled);
 
     private CachedTranslations _cachedTranslations = new();
 
-    // Cached colors
+    /// <summary>
+    /// Cached color values for performance optimization.
+    /// </summary>
     private static readonly Dictionary<string, Color32> _cachedColors = new()
     {
         ["#00f583"] = Utils.HexToColor32("#00f583"),
@@ -43,7 +50,9 @@ internal class PlayerInfoDisplay : MonoBehaviour
         ["#8731e7"] = Utils.HexToColor32("#8731e7")
     };
 
-    // Cached translations
+    /// <summary>
+    /// Cached translations for performance optimization.
+    /// </summary>
     private class CachedTranslations
     {
         internal readonly string Loading = Translator.GetString("Player.Loading");
@@ -56,6 +65,10 @@ internal class PlayerInfoDisplay : MonoBehaviour
         internal readonly string BetterUser = Translator.GetString("Player.BetterUser");
     }
 
+    /// <summary>
+    /// Initializes the player info display.
+    /// </summary>
+    /// <param name="player">The player to display info for.</param>
     internal void Init(PlayerControl player)
     {
         _player = player;
@@ -71,6 +84,13 @@ internal class PlayerInfoDisplay : MonoBehaviour
         _bottomText.fontSize = 1.3f;
     }
 
+    /// <summary>
+    /// Instantiates a player info text object.
+    /// </summary>
+    /// <param name="name">The name of the text object.</param>
+    /// <param name="positionOffset">The position offset from the parent.</param>
+    /// <param name="parent">The parent transform.</param>
+    /// <returns>The created TextMeshPro component.</returns>
     protected TextMeshPro InstantiatePlayerInfoText(string name, Vector3 positionOffset, Transform parent)
     {
         var newTextObject = Instantiate(_nameText, parent);
@@ -85,6 +105,9 @@ internal class PlayerInfoDisplay : MonoBehaviour
         return textMesh;
     }
 
+    /// <summary>
+    /// Resets all text displays to empty.
+    /// </summary>
     private void ResetText()
     {
         _infoText?.SetText(string.Empty);
@@ -92,10 +115,19 @@ internal class PlayerInfoDisplay : MonoBehaviour
         _bottomText?.SetText(string.Empty);
     }
 
+    /// <summary>
+    /// LateUpdate override with cooldown for performance optimization.
+    /// </summary>
     protected virtual void LateUpdate()
     {
         if (Time.frameCount - _lastUpdateFrame < UPDATE_COOLDOWN)
             return;
+
+        if (_player == null || _player.Data == null || _nameText == null)
+        {
+            ResetText();
+            return;
+        }
 
         _sbTag.Clear();
         _sbTagTop.Clear();
@@ -109,6 +141,9 @@ internal class PlayerInfoDisplay : MonoBehaviour
         _lastUpdateFrame = Time.frameCount;
     }
 
+    /// <summary>
+    /// Updates player information display.
+    /// </summary>
     private void UpdatePlayerInfo()
     {
         if (_player?.Data == null) return;
@@ -177,6 +212,12 @@ internal class PlayerInfoDisplay : MonoBehaviour
         UpdateTextIfChanged(_infoText, _sbTag, ref _lastInfoText);
     }
 
+    /// <summary>
+    /// Updates text if changed, optimizing performance.
+    /// </summary>
+    /// <param name="textMesh">TextMeshPro component to update.</param>
+    /// <param name="sb">StringBuilder containing new text.</param>
+    /// <param name="lastValue">Reference to last value for comparison.</param>
     private static void UpdateTextIfChanged(TextMeshPro textMesh, StringBuilder sb, ref string lastValue)
     {
         if (textMesh == null) return;
@@ -189,6 +230,11 @@ internal class PlayerInfoDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Validates and formats the player's friend code.
+    /// </summary>
+    /// <param name="color">Output parameter for the friend code color.</param>
+    /// <returns>The formatted friend code string.</returns>
     private string ValidateFriendCode(out string color)
     {
         color = "#FFFFFF";
@@ -257,6 +303,10 @@ internal class PlayerInfoDisplay : MonoBehaviour
         return friendCode.Trim();
     }
 
+    /// <summary>
+    /// Sets player outline based on data from BetterDataManager.
+    /// </summary>
+    /// <param name="sbTag">StringBuilder for tag text.</param>
     [HideFromIl2Cpp]
     private void SetPlayerOutline(StringBuilder sbTag)
     {
@@ -293,6 +343,12 @@ internal class PlayerInfoDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks if player data exists in a HashSet of UserInfo.
+    /// </summary>
+    /// <param name="dataList">HashSet of UserInfo to check.</param>
+    /// <param name="playerData">Player data to look for.</param>
+    /// <returns>True if player data exists in the HashSet.</returns>
     [HideFromIl2Cpp]
     private static bool ContainsPlayerData(HashSet<UserInfo> dataList, NetworkedPlayerInfo playerData)
     {
@@ -304,6 +360,12 @@ internal class PlayerInfoDisplay : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Sets lobby-specific information.
+    /// </summary>
+    /// <param name="newName">Reference to the player's name.</param>
+    /// <param name="betterData">Extended player data.</param>
+    /// <param name="sbTag">StringBuilder for tag text.</param>
     [HideFromIl2Cpp]
     private void SetLobbyInfo(ref string newName, ExtendedPlayerInfo betterData, StringBuilder sbTag)
     {
@@ -321,6 +383,10 @@ internal class PlayerInfoDisplay : MonoBehaviour
         sbTag.Append($"<color=#b554ff>ID: {_player.PlayerId}</color>+++");
     }
 
+    /// <summary>
+    /// Sets in-game specific information.
+    /// </summary>
+    /// <param name="sbTagTop">StringBuilder for top tag text.</param>
     [HideFromIl2Cpp]
     private void SetInGameInfo(StringBuilder sbTagTop)
     {
@@ -343,11 +409,17 @@ internal class PlayerInfoDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Updates player highlight/outline.
+    /// </summary>
     private void UpdatePlayerHighlight()
     {
         SetPlayerOutline(new StringBuilder(32));
     }
 
+    /// <summary>
+    /// Updates color blind text position.
+    /// </summary>
     private void UpdateColorBlindTextPosition()
     {
         var text = _player.cosmetics.colorBlindText;

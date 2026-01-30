@@ -5,15 +5,31 @@ using UnityEngine;
 
 namespace BetterAmongUs.Modules;
 
+/// <summary>
+/// Interface for MonoBehavior extensions in BetterAmongUs.
+/// </summary>
 internal interface IMonoExtension
 {
+    /// <summary>
+    /// Gets or sets the base MonoBehavior this extension is attached to.
+    /// </summary>
     MonoBehaviour? BaseMono { get; set; }
 }
 
+/// <summary>
+/// Generic interface for MonoBehavior extensions with specific base type.
+/// </summary>
+/// <typeparam name="T">The type of MonoBehavior this extension attaches to.</typeparam>
 internal interface IMonoExtension<T> : IMonoExtension where T : MonoBehaviour
 {
+    /// <summary>
+    /// Gets or sets the base MonoBehavior of type T.
+    /// </summary>
     new T? BaseMono { get; set; }
 
+    /// <summary>
+    /// Explicit interface implementation for non-generic BaseMono.
+    /// </summary>
     MonoBehaviour? IMonoExtension.BaseMono
     {
         get => BaseMono;
@@ -21,10 +37,19 @@ internal interface IMonoExtension<T> : IMonoExtension where T : MonoBehaviour
     }
 }
 
+/// <summary>
+/// Manages MonoBehavior extensions and their lifecycle in BetterAmongUs.
+/// </summary>
 internal static class MonoExtensionManager
 {
     private static readonly Dictionary<Type, List<ExtensionPair>> _extensionsByBaseType = [];
 
+    /// <summary>
+    /// Gets an extension of type T attached to a MonoBehavior.
+    /// </summary>
+    /// <typeparam name="T">The type of extension to retrieve.</typeparam>
+    /// <param name="mono">The base MonoBehavior.</param>
+    /// <returns>The extension instance, or null if not found.</returns>
     internal static T? Get<T>(MonoBehaviour mono) where T : class, IMonoExtension
     {
         if (mono == null) return null;
@@ -43,11 +68,21 @@ internal static class MonoExtensionManager
         return null;
     }
 
+    /// <summary>
+    /// Runs a callback when a MonoBehavior extension becomes available.
+    /// </summary>
+    /// <typeparam name="T">The type of extension to wait for.</typeparam>
+    /// <param name="mono">The base MonoBehavior.</param>
+    /// <param name="getExtension">Function to retrieve the extension.</param>
+    /// <param name="callback">Callback to execute when extension is available.</param>
     internal static void RunWhenNotNull<T>(MonoBehaviour mono, Func<T?> getExtension, Action<T> callback) where T : class, IMonoExtension
     {
         mono.StartCoroutine(CoWaitForExtension(getExtension, callback));
     }
 
+    /// <summary>
+    /// Coroutine that waits for an extension to become available.
+    /// </summary>
     private static IEnumerator CoWaitForExtension<T>(Func<T?> getExtension, Action<T> callback) where T : class, IMonoExtension
     {
         T? extension;
@@ -58,6 +93,9 @@ internal static class MonoExtensionManager
         callback(extension);
     }
 
+    /// <summary>
+    /// Cleans up all registered extensions with null references.
+    /// </summary>
     internal static void CleanAll()
     {
         foreach (var kvp in _extensionsByBaseType.ToArray())
@@ -78,6 +116,11 @@ internal static class MonoExtensionManager
         }
     }
 
+    /// <summary>
+    /// Registers a MonoBehavior extension with the manager.
+    /// </summary>
+    /// <param name="extension">The extension to register.</param>
+    /// <returns>True if registration was successful, false otherwise.</returns>
     internal static bool RegisterExtension(this IMonoExtension extension)
     {
         // Try to find IMonoExtension<T> implementation
@@ -135,6 +178,10 @@ internal static class MonoExtensionManager
         return true;
     }
 
+    /// <summary>
+    /// Unregisters a MonoBehavior extension from the manager.
+    /// </summary>
+    /// <param name="extension">The extension to unregister.</param>
     internal static void UnregisterExtension(this IMonoExtension extension)
     {
         if (extension.BaseMono == null) return;
@@ -157,9 +204,19 @@ internal static class MonoExtensionManager
         }
     }
 
+    /// <summary>
+    /// Represents a pairing between a base MonoBehavior and its extension.
+    /// </summary>
     private struct ExtensionPair
     {
+        /// <summary>
+        /// The base MonoBehavior.
+        /// </summary>
         internal MonoBehaviour? Base;
+
+        /// <summary>
+        /// The extension attached to the base.
+        /// </summary>
         internal IMonoExtension? Extension;
     }
 }

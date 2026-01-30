@@ -5,45 +5,49 @@ namespace BetterAmongUs.Network.Configs;
 
 /// <summary>
 /// Represents the data structure for mod news items within the game.
-/// Contains properties to store news-related details such as title, subtitle, content, and metadata.
 /// </summary>
 internal sealed class NewsData()
 {
     /// <summary>
-    /// Indicates whether the news item should be shown.
+    /// Gets or sets a value indicating whether the news item should be shown.
     /// </summary>
     public bool Show { get; set; }
 
     /// <summary>
-    /// Defines the type/category of the news item.
+    /// Gets or sets the type/category of the news item.
     /// </summary>
     public int Type { get; set; }
 
     /// <summary>
-    /// The main title of the news item.
+    /// Gets or sets the main title of the news item.
     /// </summary>
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// The subtitle providing additional context to the news title.
+    /// Gets or sets the subtitle providing additional context to the news title.
     /// </summary>
     public string SubTitle { get; set; } = string.Empty;
 
     /// <summary>
-    /// The title used for listing purposes.
+    /// Gets or sets the title used for listing purposes.
     /// </summary>
     public string ListTitle { get; set; } = string.Empty;
 
     /// <summary>
-    /// The publication date of the news item, formatted as a string.
+    /// Gets or sets the publication date of the news item, formatted as a string.
     /// </summary>
     public string Date { get; set; } = string.Empty;
 
     /// <summary>
-    /// The content or body of the news item.
+    /// Gets or sets the content or body of the news item, keyed by language ID.
     /// </summary>
     public Dictionary<int, string> Contents { get; set; } = [];
 
+    /// <summary>
+    /// Deserializes YAML content into a NewsData object.
+    /// </summary>
+    /// <param name="input">The YAML string to parse.</param>
+    /// <returns>A NewsData object if deserialization succeeds; otherwise, null.</returns>
     internal static NewsData? Serialize(string input)
     {
         var newsData = new NewsData();

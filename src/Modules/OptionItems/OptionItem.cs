@@ -1,5 +1,6 @@
 ﻿using BetterAmongUs.Data;
 using BetterAmongUs.Helpers;
+using BetterAmongUs.Modules.Support;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -7,18 +8,18 @@ using UnityEngine;
 namespace BetterAmongUs.Modules.OptionItems;
 
 /// <summary>
-/// Base Option class.
+/// Base abstract class for configuration option items in BetterAmongUs.
 /// </summary>
-internal abstract class OptionItem
+public abstract class OptionItem
 {
     internal static int MaskLayer => 20;
-    internal static List<OptionItem> AllTBROptions = [];
-    internal static List<OptionItem> AllTBROptionsTemp = [];
+    internal static List<OptionItem> AllOptions = [];
+    internal static List<OptionItem> AllOptionsTemp = [];
     internal const string InfiniteIcon = "<b>∞</b>";
     internal virtual bool CanLoad => true;
     internal virtual bool IsOption => true;
-    internal string Name => Translation != null ? Translator.GetString(Translation, showInvalid: false) : "None";
-    internal int Id => _id ?? -1;
+    public string Name => Translation != null ? Translator.GetString(Translation, showInvalid: false) : "None";
+    public int Id => _id ?? -1;
     protected int? _id { get; set; } = null;
     protected string? Translation { get; set; } = null;
     internal OptionTab? Tab { get; set; }
@@ -30,13 +31,17 @@ internal abstract class OptionItem
     internal virtual bool Show => ShowCondition.Invoke();
     internal virtual bool ShowChildren => Show;
     internal Func<bool>? ShowCondition = () => { return true; };
-    internal bool Hide => !Show || GetParents().Any(opt => !opt.ShowChildren);
-    internal static OptionItem? GetOptionById(int id) => AllTBROptions.FirstOrDefault(opt => opt._id == id);
+    internal bool Hide => !Show || GetParents().Any(opt => !opt.ShowChildren) || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_GameSetting + Translation);
+    internal static OptionItem? GetOptionById(int id) => AllOptions.FirstOrDefault(opt => opt._id == id);
     internal virtual void UpdateVisuals(bool updateTabVisuals = true) { }
-    internal abstract string ValueAsString();
+    public abstract string ValueAsString();
     internal virtual void TryLoad(bool forceLoad = false) { }
     internal virtual void SetToDefault() { }
 
+    /// <summary>
+    /// Sets up the Among Us option behavior with proper masking for UI rendering.
+    /// </summary>
+    /// <param name="optionBehaviour">The option behavior to set up.</param>
     protected void SetupAUOption(OptionBehaviour optionBehaviour)
     {
         Option?.SetClickMask(Tab.AUTab.ButtonClickMask);
@@ -53,6 +58,10 @@ internal abstract class OptionItem
         }
     }
 
+    /// <summary>
+    /// Displays a notification with the option's current value or custom text.
+    /// </summary>
+    /// <param name="custom">Custom text to display instead of the value.</param>
     internal void PopNotification(string custom = "")
     {
         if (_id == null) return;
@@ -62,6 +71,10 @@ internal abstract class OptionItem
         Utils.SettingsChangeNotifier(Id, msg, false);
     }
 
+    /// <summary>
+    /// Gets the hierarchical path of parent options leading to this option.
+    /// </summary>
+    /// <returns>A formatted string showing the option hierarchy.</returns>
     internal string GetParentPath()
     {
         List<string> names = [Name ?? "???"];
@@ -75,8 +88,16 @@ internal abstract class OptionItem
         return Utils.RemoveSizeHtmlText(string.Join("<b><color=#868686>/</color></b>", names.AsEnumerable().Reverse()));
     }
 
+    /// <summary>
+    /// Gets the highest-level parent option in the hierarchy.
+    /// </summary>
+    /// <returns>The root parent option, or null if no parent exists.</returns>
     internal OptionItem? GetLastParent() => GetParents().LastOrDefault();
 
+    /// <summary>
+    /// Enumerates all parent options in the hierarchy from immediate parent to root.
+    /// </summary>
+    /// <returns>An enumerable of parent options.</returns>
     internal IEnumerable<OptionItem> GetParents()
     {
         if (Parent == null) yield break;
@@ -90,9 +111,9 @@ internal abstract class OptionItem
     }
 
     /// <summary>
-    /// Get child index of option.
+    /// Gets the child index depth of this option in the hierarchy.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The depth level (0 for root options).</returns>
     internal int GetChildIndex()
     {
         int index = 0;
@@ -106,10 +127,11 @@ internal abstract class OptionItem
     }
 
     /// <summary>
-    /// Generates a automatic tree text display for option.
+    /// Generates a text tree representation of the option hierarchy.
     /// </summary>
-    /// <param name="size">Size of text</param>
-    /// <returns>string</returns>
+    /// <param name="size">Text size percentage.</param>
+    /// <param name="showForPercentOption">Whether to show child options for percent items.</param>
+    /// <returns>A formatted string showing the option tree structure.</returns>
     internal string FormatOptionsToTextTree(float size = 50f, bool showForPercentOption = true)
     {
         StringBuilder sb = new();
@@ -176,6 +198,13 @@ internal abstract class OptionItem
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates text tree representations for multiple option hierarchies.
+    /// </summary>
+    /// <param name="optionItems">Array of root option items.</param>
+    /// <param name="size">Text size percentage.</param>
+    /// <param name="showForPercentOption">Whether to show child options for percent items.</param>
+    /// <returns>A formatted string showing all option tree structures.</returns>
     internal static string FormatOptionsToTextTrees(OptionItem?[] optionItems, float size = 50f, bool showForPercentOption = true)
     {
         StringBuilder sb = new();
@@ -251,6 +280,10 @@ internal abstract class OptionItem
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Creates a description button that shows additional information when clicked.
+    /// </summary>
+    /// <param name="text">The description text to display.</param>
     internal void CreateDescriptionButton(string text)
     {
         if (Option == null) return;
@@ -277,108 +310,138 @@ internal abstract class OptionItem
     }
 
     /// <summary>
-    /// Get bool for CheckboxOption, could throw exception if option is not a CheckboxOption.
+    /// Gets the boolean value of the option (for CheckboxOption).
     /// </summary>
-    /// <returns>bool</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    internal virtual bool GetBool()
+    /// <returns>The boolean value.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support boolean values.</exception>
+    public virtual bool GetBool()
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Get float for FloatOption, could throw exception if option is not a FloatOption.
+    /// Gets the float value of the option (for FloatOption).
     /// </summary>
-    /// <returns>float</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    internal virtual float GetFloat()
+    /// <returns>The float value.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support float values.</exception>
+    public virtual float GetFloat()
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Get float for IntOption, could throw exception if option is not a IntOption.
+    /// Gets the integer value of the option (for IntOption).
     /// </summary>
-    /// <returns>int</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    internal virtual int GetInt()
+    /// <returns>The integer value.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support integer values.</exception>
+    public virtual int GetInt()
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Get int for StringOption and PlayerOption, could throw exception if option is not a StringOption.
+    /// Gets the string value index of the option (for StringOption and PlayerOption).
     /// </summary>
-    /// <returns>int</returns>
-    /// <exception cref="NotImplementedException"></exception>
-    internal virtual int GetStringValue()
+    /// <returns>The string value index.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support string values.</exception>
+    public virtual int GetStringValue()
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Checks if the value is a boolean.
+    /// Checks if the option's value matches a specific boolean.
     /// </summary>
-    /// <param name="@bool">The boolean value to check.</param>
-    /// <returns>True if the value matches, otherwise false.</returns>
-    /// <exception cref="NotImplementedException">Thrown if the method is not implemented.</exception>
-    internal virtual bool Is(bool @bool)
+    /// <param name="@bool">The boolean value to check against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support boolean comparison.</exception>
+    public virtual bool Is(bool @bool)
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Checks if the value is a float.
+    /// Checks if the option's value matches a specific float.
     /// </summary>
-    /// <param name="@float">The float value to check.</param>
-    /// <returns>True if the value matches, otherwise false.</returns>
-    /// <exception cref="NotImplementedException">Thrown if the method is not implemented.</exception>
-    internal virtual bool Is(float @float)
+    /// <param name="@float">The float value to check against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support float comparison.</exception>
+    public virtual bool Is(float @float)
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Checks if the value is an integer.
+    /// Checks if the option's value matches a specific integer.
     /// </summary>
-    /// <param name="@int">The integer value to check.</param>
-    /// <returns>True if the value matches, otherwise false.</returns>
-    /// <exception cref="NotImplementedException">Thrown if the method is not implemented.</exception>
-    internal virtual bool Is(int @int)
+    /// <param name="@int">The integer value to check against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support integer comparison.</exception>
+    public virtual bool Is(int @int)
     {
         throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Checks if the value is a string.
+    /// Checks if the option's value matches a specific string.
     /// </summary>
-    /// <param name="@string">The string value to check.</param>
-    /// <returns>True if the value matches, otherwise false.</returns>
-    /// <exception cref="NotImplementedException">Thrown if the method is not implemented.</exception>
-    internal virtual bool Is(string @string)
+    /// <param name="@string">The string value to check against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    /// <exception cref="NotImplementedException">Thrown when the option type doesn't support string comparison.</exception>
+    public virtual bool Is(string @string)
     {
         throw new NotImplementedException();
     }
 
-    class TreeNode
+    /// <summary>
+    /// Represents a node in the option hierarchy tree for text formatting.
+    /// </summary>
+    internal class TreeNode
     {
+        /// <summary>
+        /// Gets or sets the parent tree node.
+        /// </summary>
         internal TreeNode? ParentNode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the display text for this node.
+        /// </summary>
         internal string? Text { get; set; }
+
+        /// <summary>
+        /// Gets or sets the depth level in the tree.
+        /// </summary>
         internal int Depth { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether this is the last child of its parent.
+        /// </summary>
         internal bool IsLastChild { get; set; }
     }
 }
 
-internal abstract class OptionItem<T> : OptionItem
+/// <summary>
+/// Generic base class for typed option items with value storage and serialization.
+/// </summary>
+/// <typeparam name="T">The type of value stored by this option.</typeparam>
+public abstract class OptionItem<T> : OptionItem
 {
     protected TextMeshPro? TitleTMP { get; set; }
     protected TextMeshPro? ValueTMP { get; set; }
     private bool HasLoadValue { get; set; }
     protected T? Value { get; set; } = default;
     protected T? DefaultValue { get; set; } = default;
-    internal virtual T? GetValue() => Value;
+    public virtual T? GetValue()
+    {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_GameSetting + Translation))
+        {
+            return DefaultValue;
+        }
+
+        return Value;
+    }
     internal virtual T? GetDefaultValue() => DefaultValue;
-    internal override string ValueAsString() => Value?.ToString() ?? string.Empty;
+    public override string ValueAsString() => Value?.ToString() ?? string.Empty;
     internal override void SetToDefault()
     {
         Value = DefaultValue;
@@ -387,6 +450,10 @@ internal abstract class OptionItem<T> : OptionItem
     internal virtual void OnValueChange(T oldValue, T newValue) { }
     internal Action<OptionItem>? OnValueChangeAction = (opt) => { };
 
+    /// <summary>
+    /// Sets up common text properties for option display.
+    /// </summary>
+    /// <param name="textPro">The TextMeshPro component to configure.</param>
     protected void SetupText(TextMeshPro textPro)
     {
         textPro.transform.SetLocalX(-2.5f);
@@ -402,8 +469,14 @@ internal abstract class OptionItem<T> : OptionItem
         textPro.outlineWidth = 0.25f;
     }
 
+    /// <summary>
+    /// Sets up the option behavior after creation.
+    /// </summary>
     protected virtual void SetupOptionBehavior() { }
 
+    /// <summary>
+    /// Configures the visual appearance of the option based on its hierarchy depth.
+    /// </summary>
     protected void SetOptionVisuals()
     {
         if (Option != null)
@@ -431,7 +504,11 @@ internal abstract class OptionItem<T> : OptionItem
         UpdateVisuals();
     }
 
-    internal virtual void SetValue(T newValue)
+    /// <summary>
+    /// Sets the option's value and triggers updates and notifications.
+    /// </summary>
+    /// <param name="newValue">The new value to set.</param>
+    public virtual void SetValue(T newValue)
     {
         T? oldValue = Value;
         Value = newValue;
@@ -442,6 +519,10 @@ internal abstract class OptionItem<T> : OptionItem
         OnValueChangeAction.Invoke(this);
     }
 
+    /// <summary>
+    /// Attempts to load the option's value from persistent storage.
+    /// </summary>
+    /// <param name="forceLoad">Whether to force reload even if already loaded.</param>
     internal override void TryLoad(bool forceLoad = false)
     {
         if (!CanLoad) return;
@@ -453,6 +534,9 @@ internal abstract class OptionItem<T> : OptionItem
         }
     }
 
+    /// <summary>
+    /// Loads the option's value from persistent storage.
+    /// </summary>
     protected virtual void Load()
     {
         if (!CanLoad) return;
@@ -461,6 +545,9 @@ internal abstract class OptionItem<T> : OptionItem
         Value = BetterDataManager.LoadSetting(Id, DefaultValue);
     }
 
+    /// <summary>
+    /// Saves the option's value to persistent storage.
+    /// </summary>
     internal virtual void Save()
     {
         if (!CanLoad) return;

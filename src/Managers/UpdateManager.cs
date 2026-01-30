@@ -1,5 +1,6 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
 using BetterAmongUs.Helpers;
+using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Network.Loaders;
 using Il2CppInterop.Runtime.Attributes;
 using System.Collections;
@@ -9,13 +10,26 @@ using UnityEngine;
 
 namespace BetterAmongUs.Managers;
 
+/// <summary>
+/// Manages update functionality for BetterAmongUs, including download and installation.
+/// </summary>
 internal sealed class UpdateManager : MonoBehaviour
 {
     private bool AmUpdateing;
 
+    /// <summary>
+    /// Gets the singleton instance of the UpdateManager.
+    /// </summary>
     internal static UpdateManager? Instance { get; private set; }
+
+    /// <summary>
+    /// Gets whether the application is waiting for a restart after an update.
+    /// </summary>
     internal static bool WaitForRestart { get; private set; }
 
+    /// <summary>
+    /// Initializes the UpdateManager singleton.
+    /// </summary>
     internal static void Init()
     {
         var obj = new GameObject("UpdateManager(BAU)") { hideFlags = HideFlags.HideAndDontSave };
@@ -23,8 +37,13 @@ internal sealed class UpdateManager : MonoBehaviour
         Instance = obj.AddComponent<UpdateManager>();
     }
 
+    /// <summary>
+    /// Called when the main menu is loaded to set up update UI elements.
+    /// </summary>
     internal void OnMainMenu()
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_ModUpdate)) return;
+
         var doNotPress = FindObjectOfType<DoNotPressButton>(true);
         if (doNotPress != null)
         {
@@ -57,6 +76,9 @@ internal sealed class UpdateManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Unity Start method called when the component is initialized.
+    /// </summary>
     private void Start()
     {
         var oldDll = Assembly.GetExecutingAssembly().Location + ".old";
@@ -69,6 +91,11 @@ internal sealed class UpdateManager : MonoBehaviour
     private GameObject? mainMenu;
     private GameObject? ambience;
 
+    /// <summary>
+    /// Coroutine that handles the download process when the update button is pressed.
+    /// </summary>
+    /// <param name="button">The DoNotPressButton that was clicked.</param>
+    /// <returns>An IEnumerator for the coroutine.</returns>
     [HideFromIl2Cpp]
     private IEnumerator CoPressDownload(DoNotPressButton button)
     {

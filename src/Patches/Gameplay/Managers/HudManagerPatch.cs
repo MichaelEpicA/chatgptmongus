@@ -6,9 +6,9 @@ using TMPro;
 using UnityEngine;
 
 
-namespace BetterAmongUs.Patches.Managers;
+namespace BetterAmongUs.Patches.Gameplay.Managers;
 
-[HarmonyPatch(typeof(HudManager))]
+[HarmonyPatch]
 internal static class HudManagerPatch
 {
     internal static string WelcomeMessage = $"<b><color=#00b530><size=125%><align=\"center\">{string.Format(Translator.GetString("WelcomeMsg.WelcomeToBAU"), Translator.GetString("BetterAmongUs"))}\n{BAUPlugin.GetVersionText()}</size>\n" +
@@ -17,9 +17,9 @@ internal static class HudManagerPatch
 
     private static bool HasBeenWelcomed = false;
 
-    [HarmonyPatch(nameof(HudManager.Start))]
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
     [HarmonyPostfix]
-    private static void Start_Postfix(HudManager __instance)
+    private static void HudManager_Start_Postfix(HudManager __instance)
     {
         if (BetterNotificationManager.BAUNotificationManagerObj == null)
         {
@@ -59,9 +59,9 @@ internal static class HudManagerPatch
         }, 1f, "HudManagerPatch Start");
     }
 
-    [HarmonyPatch(nameof(HudManager.Update))]
+    [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
     [HarmonyPostfix]
-    private static void Update_Postfix(HudManager __instance)
+    private static void HudManager_Update_Postfix(HudManager __instance)
     {
         try
         {

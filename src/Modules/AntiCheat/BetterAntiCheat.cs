@@ -3,6 +3,7 @@ using BetterAmongUs.Data;
 using BetterAmongUs.Enums;
 using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
+using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Mono;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using HarmonyLib;
@@ -11,10 +12,19 @@ using InnerNet;
 
 namespace BetterAmongUs.Modules.AntiCheat;
 
+/// <summary>
+/// Provides anti-cheat functionality for detecting and handling cheating behaviors.
+/// </summary>
 internal static class BetterAntiCheat
 {
+    /// <summary>
+    /// Gets whether anti-cheat is enabled for the current player.
+    /// </summary>
     internal static bool IsEnabled => PlayerControl.LocalPlayer?.Data?.IsIncomplete == false;
 
+    /// <summary>
+    /// Updates anti-cheat checks for all players in the game.
+    /// </summary>
     internal static void Update()
     {
         if (GameState.IsHost && GameState.IsInGame)
@@ -49,14 +59,20 @@ internal static class BetterAntiCheat
         }
     }
 
+    /// <summary>
+    /// Harmony patch for PlatformSpecificData to detect platform spoofing.
+    /// </summary>
     [HarmonyPatch(typeof(PlatformSpecificData))]
     class PlatformSpecificDataPatch
     {
+        /// <summary>
+        /// Postfix patch to validate platform data after deserialization.
+        /// </summary>
         [HarmonyPatch(nameof(PlatformSpecificData.Deserialize))]
         [HarmonyPostfix]
         internal static void Deserialize_Postfix(PlatformSpecificData __instance)
         {
-            if (!BAUPlugin.AntiCheat.Value || !GameState.IsVanillaServer) return;
+            if (!BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !GameState.IsVanillaServer) return;
 
             if (GameState.IsLobby)
             {
@@ -110,7 +126,12 @@ internal static class BetterAntiCheat
         }
     }
 
-    // Handle RPC before anti cheat detection
+    /// <summary>
+    /// Handles RPCs before anti-cheat detection checks.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The RPC call ID.</param>
+    /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void HandleCheatRPCBeforeCheck(PlayerControl player, byte callId, MessageReader oldReader)
     {
         if (!IsEnabled) return;
@@ -120,11 +141,16 @@ internal static class BetterAntiCheat
         reader.Recycle();
     }
 
-    // Check and notify for invalid rpcs
+    /// <summary>
+    /// Checks and notifies for invalid RPCs.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The RPC call ID.</param>
+    /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void CheckRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
         if (player == null || player?.Data == null) return;
-        if (!IsEnabled || !BAUPlugin.AntiCheat.Value || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return;
+        if (!IsEnabled || !BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return;
         if (player.IsLocalPlayer() && player.IsHost()) return;
 
         MessageReader reader = MessageReader.Get(oldReader);
@@ -132,13 +158,19 @@ internal static class BetterAntiCheat
         reader.Recycle();
     }
 
-    // Check notify and cancel out request for invalid rpcs
+    /// <summary>
+    /// Checks, notifies, and cancels invalid RPCs.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The RPC call ID.</param>
+    /// <param name="oldReader">The MessageReader containing RPC data.</param>
+    /// <returns>True if the RPC should be processed, false if it should be canceled.</returns>
     internal static bool CheckCancelRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
         try
         {
             if (player == null || player?.Data == null) return true;
-            if (!IsEnabled || !BAUPlugin.AntiCheat.Value || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return true;
+            if (!IsEnabled || !BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectInvalidRPCs.GetBool()) return true;
             if (player.IsLocalPlayer() && player.IsHost()) return true;
 
             MessageReader reader = MessageReader.Get(oldReader);
@@ -242,7 +274,12 @@ internal static class BetterAntiCheat
         }
     }
 
-    // Handle RPC received from players
+    /// <summary>
+    /// Handles RPCs received from players.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The RPC call ID.</param>
+    /// <param name="oldReader">The MessageReader containing RPC data.</param>
     internal static void HandleRPC(PlayerControl player, byte callId, MessageReader oldReader)
     {
         if (player == null || player?.Data == null || player.IsLocalPlayer()) return;
@@ -252,7 +289,13 @@ internal static class BetterAntiCheat
         reader.Recycle();
     }
 
-    // Check game states when sabotaging
+    /// <summary>
+    /// Checks game states when sabotaging systems.
+    /// </summary>
+    /// <param name="player">The player attempting the sabotage.</param>
+    /// <param name="systemType">The system type being updated.</param>
+    /// <param name="oldReader">The MessageReader containing system update data.</param>
+    /// <returns>True if the sabotage should be allowed, false otherwise.</returns>
     internal static bool RpcUpdateSystemCheck(PlayerControl player, SystemTypes systemType, MessageReader oldReader)
     {
         if (Utils.SystemTypeIsSabotage(systemType) || systemType is SystemTypes.Doors)
@@ -275,7 +318,11 @@ internal static class BetterAntiCheat
         return notCanceled;
     }
 
-    // Check if RPC is known
+    /// <summary>
+    /// Checks if an RPC ID is from a known/trusted RPC enumeration.
+    /// </summary>
+    /// <param name="RPCId">The RPC ID to check.</param>
+    /// <returns>True if the RPC ID is from a known enumeration, false otherwise.</returns>
     private static bool TrustedRPCs(int RPCId)
     {
         foreach (RpcCalls rpc in Enum.GetValues(typeof(RpcCalls)))

@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;
 
-[HarmonyPatch(typeof(MeetingHud))]
+[HarmonyPatch]
 internal static class MeetingHudPatch
 {
-    [HarmonyPatch(nameof(MeetingHud.Start))]
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start))]
     [HarmonyPostfix]
-    private static void Start_Postfix(MeetingHud __instance)
+    private static void MeetingHud_Start_Postfix(MeetingHud __instance)
     {
         foreach (var pva in __instance.playerStates)
         {
@@ -47,16 +47,16 @@ internal static class MeetingHudPatch
     internal static float timeOpen = 0f;
 
     // Set player meeting info
-    [HarmonyPatch(nameof(MeetingHud.Update))]
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]
     [HarmonyPostfix]
-    private static void Update_Postfix(MeetingHud __instance)
+    private static void MeetingHud_Update_Postfix(MeetingHud __instance)
     {
         timeOpen += Time.deltaTime;
     }
 
-    [HarmonyPatch(nameof(MeetingHud.Close))]
+    [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Close))]
     [HarmonyPostfix]
-    private static void Close_Postfix()
+    private static void MeetingHud_Close_Postfix()
     {
         timeOpen = 0f;
         Logger_.LogHeader("Meeting Has Ended");

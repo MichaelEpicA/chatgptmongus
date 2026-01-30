@@ -7,12 +7,22 @@ using UnityEngine.Networking;
 
 namespace BetterAmongUs.Network;
 
+/// <summary>
+/// Provides methods for downloading files from GitHub repositories.
+/// </summary>
 internal static class GitHubFile
 {
     /// <summary>
-    /// Downloads an individual visor-related file from the remote repository and saves it locally.
-    /// Handles errors and logs any failed downloads to avoid missing assets.
+    /// Downloads an individual file from the remote repository and saves it locally.
     /// </summary>
+    /// <param name="url">The URL of the file to download.</param>
+    /// <param name="localFilePath">The local file path to save the downloaded file to.</param>
+    /// <param name="callback">Optional callback to execute after successful download.</param>
+    /// <param name="showProgress">Whether to show a progress bar during download.</param>
+    /// <returns>IEnumerator for coroutine execution.</returns>
+    /// <remarks>
+    /// Handles errors and logs any failed downloads to avoid missing assets.
+    /// </remarks>
     [HideFromIl2Cpp]
     internal static IEnumerator CoDownloadFile(string url, string localFilePath, Action<string>? callback = null, bool showProgress = false)
     {
@@ -72,9 +82,11 @@ internal static class GitHubFile
     }
 
     /// <summary>
-    /// Downloads an individual visor-related file from the remote repository and saves it locally.
-    /// Handles errors and logs any failed downloads to avoid missing assets.
+    /// Downloads a manifest file from the remote repository.
     /// </summary>
+    /// <param name="url">The URL of the manifest file to download.</param>
+    /// <param name="Callback">Callback to execute with the downloaded manifest content.</param>
+    /// <returns>IEnumerator for coroutine execution.</returns>
     [HideFromIl2Cpp]
     internal static IEnumerator CoDownloadManifest(string url, Action<string> Callback)
     {

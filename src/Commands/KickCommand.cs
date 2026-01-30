@@ -1,6 +1,6 @@
-﻿using BetterAmongUs.Commands.Arguments;
+﻿using BetterAmongUs.Attributes;
+using BetterAmongUs.Commands.Arguments;
 using BetterAmongUs.Helpers;
-using BetterAmongUs.Attributes;
 using BetterAmongUs.Modules;
 
 namespace BetterAmongUs.Commands;
@@ -10,6 +10,16 @@ internal sealed class KickCommand : BaseCommand
 {
     internal override string Name => "kick";
     internal override string Description => "Kick a player from the game";
+    internal override bool CanRunCommand(out string reason)
+    {
+        if (!GameState.IsHost)
+        {
+            reason = "Can only run as host";
+            return false;
+        }
+
+        return base.CanRunCommand(out reason);
+    }
     public KickCommand()
     {
         playerArgument = new PlayerArgument(this);
@@ -19,7 +29,6 @@ internal sealed class KickCommand : BaseCommand
     private PlayerArgument playerArgument { get; }
     private BoolArgument boolArgument { get; }
 
-    internal override bool ShowCommand() => GameState.IsHost;
     internal override void Run()
     {
         var player = playerArgument.TryGetTarget();

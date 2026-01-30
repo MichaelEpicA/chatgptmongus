@@ -12,6 +12,7 @@ internal sealed class CheckZiplineHandler : RPCHandler
     {
         if (!GameState.IsHost)
         {
+            LogRpcInfo($"Non-host attempted CheckZipline RPC");
             return false;
         }
 

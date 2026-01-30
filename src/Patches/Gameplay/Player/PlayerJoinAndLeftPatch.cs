@@ -9,10 +9,12 @@ using InnerNet;
 
 namespace BetterAmongUs.Patches.Gameplay.Player;
 
-[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameJoined))]
-internal static class OnGameJoinedPatch
+[HarmonyPatch]
+internal static class PlayerJoinAndLeftPatch
 {
-    private static void Postfix(/*AmongUsClient __instance*/)
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameJoined))]
+    [HarmonyPostfix]
+    private static void AmongUsClient_OnGameJoined_Postfix()
     {
         // Fix host icon in lobby on modded servers
         if (!GameState.IsVanillaServer)
@@ -24,12 +26,10 @@ internal static class OnGameJoinedPatch
 
         Logger_.Log($"Successfully joined {GameCode.IntToGameName(AmongUsClient.Instance.GameId)}", "OnGameJoinedPatch");
     }
-}
 
-[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
-internal static class OnPlayerJoinedPatch
-{
-    private static void Postfix(/*AmongUsClient __instance,*/ [HarmonyArgument(0)] ClientData client)
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
+    [HarmonyPostfix]
+    private static void AmongUsClient_OnPlayerJoined_Postfix(ClientData data)
     {
         LateTask.Schedule(() =>
         {
@@ -37,7 +37,7 @@ internal static class OnPlayerJoinedPatch
             {
                 if (GameState.IsInGame)
                 {
-                    var player = Utils.PlayerFromClientId(client.Id);
+                    var player = Utils.PlayerFromClientId(data.Id);
 
                     // Auto ban player on ban list
                     if (BetterGameSettings.UseBanPlayerList.GetBool())
@@ -66,12 +66,10 @@ internal static class OnPlayerJoinedPatch
             }
         }, 2.5f, "OnPlayerJoinedPatch", false);
     }
-}
 
-[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
-internal static class OnPlayerLeftPatch
-{
-    private static void Postfix(/*AmongUsClient __instance,*/ [HarmonyArgument(0)] ClientData data, [HarmonyArgument(1)] DisconnectReasons reason)
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerLeft))]
+    [HarmonyPostfix]
+    private static void AmongUsClient_OnPlayerLeft_Postfix(ClientData data, DisconnectReasons reason)
     {
         if (GameState.IsLobby)
         {
@@ -87,28 +85,29 @@ internal static class OnPlayerLeftPatch
 
         MeetingHudPatch.UpdateHostIcon();
     }
-}
 
-[HarmonyPatch(typeof(GameData))]
-[HarmonyPatch("HandleDisconnect")]
-[HarmonyPatch(MethodType.Normal)]
-[HarmonyPatch(new Type[] { typeof(PlayerControl), typeof(DisconnectReasons) })]
-internal static class GameDataHandleDisconnectPatch
-{
-    private static void Prefix(/*GameData __instance,*/ [HarmonyArgument(0)] PlayerControl player, [HarmonyArgument(1)] DisconnectReasons reason)
+    [HarmonyPatch(typeof(GameData))]
+    [HarmonyPatch(nameof(GameData.HandleDisconnect))]
+    [HarmonyPatch(MethodType.Normal)]
+    [HarmonyPatch([typeof(PlayerControl), typeof(DisconnectReasons)])]
+    [HarmonyPrefix]
+    private static void GameData_HandleDisconnect_Prefix(PlayerControl player, DisconnectReasons reason)
     {
         if (player.BetterData() != null)
         {
             player.BetterData().DisconnectReason = reason;
         }
 
-        GameDataShowNotificationPatch.BetterShowNotification(player.Data, reason);
+        BetterShowNotification(player.Data, reason);
     }
-}
 
-[HarmonyPatch(typeof(GameData), nameof(GameData.ShowNotification))]
-internal static class GameDataShowNotificationPatch
-{
+    [HarmonyPatch(typeof(GameData), nameof(GameData.ShowNotification))]
+    [HarmonyPrefix]
+    internal static bool GameData_ShowNotification_Prefix()
+    {
+        return false;
+    }
+
     internal static void BetterShowNotification(NetworkedPlayerInfo playerData, DisconnectReasons reason = DisconnectReasons.Unknown, string forceReasonText = "")
     {
         if (playerData.BetterData().AntiCheatInfo.BannedByAntiCheat || playerData.BetterData().HasShowDcMsg) return;
@@ -160,10 +159,5 @@ internal static class GameDataShowNotificationPatch
 
             HudManager.Instance.Notifier.AddDisconnectMessage(ReasonText);
         }
-    }
-
-    internal static bool Prefix()
-    {
-        return false;
     }
 }

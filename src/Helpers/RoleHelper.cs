@@ -2,6 +2,9 @@
 
 namespace BetterAmongUs.Helpers;
 
+/// <summary>
+/// Provides helper methods for working with Among Us roles and their properties.
+/// </summary>
 internal static class RoleHelper
 {
     private static readonly Lazy<Dictionary<RoleTypes, RoleBehaviour>> roleLookup =
@@ -15,15 +18,30 @@ internal static class RoleHelper
             return dict;
         });
 
+    /// <summary>
+    /// Gets the RoleBehaviour associated with a RoleTypes enum value.
+    /// </summary>
+    /// <param name="role">The role type to look up.</param>
+    /// <returns>The RoleBehaviour if found, null otherwise.</returns>
     internal static RoleBehaviour? GetBehaviour(this RoleTypes role)
     {
         var lookup = roleLookup.Value;
         return lookup.TryGetValue(role, out var behaviour) ? behaviour : null;
     }
 
+    /// <summary>
+    /// Determines whether a role type belongs to the impostor team.
+    /// </summary>
+    /// <param name="role">The role type to check.</param>
+    /// <returns>True if the role is part of the impostor team, false otherwise.</returns>
     internal static bool IsImpostorRole(RoleTypes role) =>
         role.GetBehaviour().TeamType is RoleTeamTypes.Impostor;
 
+    /// <summary>
+    /// Gets the display name of a role type.
+    /// </summary>
+    /// <param name="role">The role type to get the name for.</param>
+    /// <returns>The display name of the role, or "???" if not found.</returns>
     internal static string GetRoleName(this RoleTypes role)
     {
         if (role is RoleTypes.ImpostorGhost)
@@ -38,6 +56,11 @@ internal static class RoleHelper
         return role.GetBehaviour()?.NiceName ?? "???";
     }
 
+    /// <summary>
+    /// Gets the hexadecimal color code associated with a role type.
+    /// </summary>
+    /// <param name="role">The role type to get the color for.</param>
+    /// <returns>The hexadecimal color string, or empty string if not found.</returns>
     internal static string GetRoleHex(this RoleTypes role)
     {
         if (RoleColor.TryGetValue(role, out var color))
@@ -48,18 +71,21 @@ internal static class RoleHelper
         return string.Empty;
     }
 
+    /// <summary>
+    /// Dictionary mapping role types to their hexadecimal color codes.
+    /// </summary>
     internal static Dictionary<RoleTypes, string> RoleColor => new()
     {
-        { RoleTypes.CrewmateGhost, "#8cffff" },
+        { RoleTypes.CrewmateGhost, Colors.CrewmateBlue.ColorToHex() },
         { RoleTypes.GuardianAngel, "#8cffff" },
-        { RoleTypes.Crewmate, "#8cffff" },
+        { RoleTypes.Crewmate, Colors.CrewmateBlue.ColorToHex() },
         { RoleTypes.Scientist, "#00d9d9" },
         { RoleTypes.Engineer, "#8f8f8f" },
         { RoleTypes.Noisemaker, "#fc7c7c" },
         { RoleTypes.Tracker, "#59f002" },
         { RoleTypes.Detective, "#0027FF" },
-        { RoleTypes.ImpostorGhost, "#f00202" },
-        { RoleTypes.Impostor, "#f00202" },
+        { RoleTypes.ImpostorGhost, Colors.ImpostorRed.ColorToHex() },
+        { RoleTypes.Impostor, Colors.ImpostorRed.ColorToHex() },
         { RoleTypes.Shapeshifter, "#f06102" },
         { RoleTypes.Phantom, "#d100b9" },
         { RoleTypes.Viper, "#367400" }

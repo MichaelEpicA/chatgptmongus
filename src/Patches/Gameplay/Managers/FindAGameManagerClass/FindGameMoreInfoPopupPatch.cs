@@ -7,16 +7,16 @@ using UnityEngine;
 
 namespace BetterAmongUs.Patches.Managers;
 
-[HarmonyPatch(typeof(FindGameMoreInfoPopup))]
+[HarmonyPatch]
 internal static class FindGameMoreInfoPopupPatch
 {
     private static InfoTextBox? _textBox;
     private static FindGameMoreInfoPopup? _findGameMoreInfoPopup;
     private static readonly StringBuilder _sb = new();
 
-    [HarmonyPatch(nameof(FindGameMoreInfoPopup.SetupInfo))]
+    [HarmonyPatch(typeof(FindGameMoreInfoPopup), nameof(FindGameMoreInfoPopup.SetupInfo))]
     [HarmonyPostfix]
-    private static void SetupInfo_Postfix(FindGameMoreInfoPopup __instance)
+    private static void FindGameMoreInfoPopup_SetupInfo_Postfix(FindGameMoreInfoPopup __instance)
     {
         _findGameMoreInfoPopup = __instance;
 

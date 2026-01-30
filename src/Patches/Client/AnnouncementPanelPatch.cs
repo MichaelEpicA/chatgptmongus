@@ -13,8 +13,9 @@ namespace BetterAmongUs.Patches.Client;
 [HarmonyPatch]
 internal static class AnnouncementPanelPatch
 {
-    [HarmonyPatch(typeof(PlayerAnnouncementData), nameof(PlayerAnnouncementData.SetAnnouncements)), HarmonyPrefix]
-    private static bool SetModAnnouncements(PlayerAnnouncementData __instance, [HarmonyArgument(0)] ref Il2CppReferenceArray<Announcement> aRange)
+    [HarmonyPatch(typeof(PlayerAnnouncementData), nameof(PlayerAnnouncementData.SetAnnouncements))]
+    [HarmonyPrefix]
+    private static bool PlayerAnnouncementData_SetModAnnouncements_Prefix(PlayerAnnouncementData __instance, ref Il2CppReferenceArray<Announcement> aRange)
     {
         ModNews.ProcessModNewsFiles();
 
@@ -45,8 +46,9 @@ internal static class AnnouncementPanelPatch
         return true;
     }
 
-    [HarmonyPatch(typeof(AnnouncementPanel), nameof(AnnouncementPanel.SetUp)), HarmonyPostfix]
-    private static void SetUpPanel(AnnouncementPanel __instance, [HarmonyArgument(0)] Announcement announcement)
+    [HarmonyPatch(typeof(AnnouncementPanel), nameof(AnnouncementPanel.SetUp))]
+    [HarmonyPostfix]
+    private static void AnnouncementPanel_SetUpPanel_Postfix(AnnouncementPanel __instance, Announcement announcement)
     {
         if (announcement.Number >= 100000)
         {

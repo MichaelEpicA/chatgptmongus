@@ -1,5 +1,5 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using Hazel;
 
@@ -15,7 +15,7 @@ internal sealed class CloseDoorsOfTypeHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{!sender.IsImpostorTeam()}");
+                LogRpcInfo($"Non-impostor attempted CloseDoorsOfType RPC");
             }
         }
     }

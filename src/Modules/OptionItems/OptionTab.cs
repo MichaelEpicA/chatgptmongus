@@ -5,20 +5,64 @@ using UnityEngine;
 
 namespace BetterAmongUs.Modules.OptionItems;
 
+/// <summary>
+/// Represents a tab in the options menu that groups related option items.
+/// </summary>
 internal sealed class OptionTab
 {
     internal static List<OptionTab> AllTabs = [];
 
     internal readonly List<OptionItem> Children = [];
+
+    /// <summary>
+    /// Gets the unique identifier for this tab.
+    /// </summary>
     internal int Id { get; private set; }
+
+    /// <summary>
+    /// Gets the translated name of this tab.
+    /// </summary>
     internal string? Name => Translator.GetString(TranName);
+
+    /// <summary>
+    /// Gets or sets the translation key for the tab name.
+    /// </summary>
     internal string? TranName { get; private set; }
+
+    /// <summary>
+    /// Gets the translated description of this tab.
+    /// </summary>
     internal string? Description => Translator.GetString(TranDescription);
+
+    /// <summary>
+    /// Gets or sets the translation key for the tab description.
+    /// </summary>
     internal string? TranDescription { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the Among Us options menu tab instance.
+    /// </summary>
     internal GameOptionsMenu? AUTab { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the button that activates this tab.
+    /// </summary>
     internal PassiveButton? TabButton { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the color theme for this tab.
+    /// </summary>
     internal Color Color { get; private set; }
 
+    /// <summary>
+    /// Creates a new option tab or returns an existing one with the same ID.
+    /// </summary>
+    /// <param name="Id">The unique identifier for the tab.</param>
+    /// <param name="tranName">Translation key for the tab name.</param>
+    /// <param name="tranDescription">Translation key for the tab description.</param>
+    /// <param name="Color">The color theme for the tab.</param>
+    /// <param name="doNotDestroyMapPicker">Whether to preserve the map picker UI.</param>
+    /// <returns>A new or existing OptionTab instance.</returns>
     internal static OptionTab Create(int Id, string tranName, string tranDescription, Color Color, bool doNotDestroyMapPicker = false)
     {
         if (GetTabById(Id) is OptionTab optionTab)
@@ -41,8 +85,17 @@ internal sealed class OptionTab
         return Item;
     }
 
+    /// <summary>
+    /// Gets an option tab by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the tab to find.</param>
+    /// <returns>The OptionTab with the matching ID, or null if not found.</returns>
     internal static OptionTab? GetTabById(int id) => AllTabs.FirstOrDefault(tab => tab.Id == id);
 
+    /// <summary>
+    /// Creates the UI behavior for this option tab.
+    /// </summary>
+    /// <param name="doNotDestroyMapPicker">Whether to preserve the map picker UI.</param>
     private void CreateBehavior(bool doNotDestroyMapPicker)
     {
         if (!GameSettingMenu.Instance) return;
@@ -81,11 +134,17 @@ internal sealed class OptionTab
         AUTab.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Updates the visual layout of all options in this tab.
+    /// </summary>
     internal void UpdateVisuals()
     {
         ShowOptions();
     }
 
+    /// <summary>
+    /// Shows and positions all option items in this tab.
+    /// </summary>
     private void ShowOptions()
     {
         if (AUTab == null) return;
@@ -135,6 +194,11 @@ internal sealed class OptionTab
         AUTab?.scrollBar?.ScrollRelative(new(0f, 0f));
     }
 
+    /// <summary>
+    /// Finds options by name (not implemented).
+    /// </summary>
+    /// <param name="name">The name to search for.</param>
+    /// <exception cref="NotImplementedException">Always thrown as this method is not implemented.</exception>
     internal static void FindOptions(string name)
     {
         throw new NotImplementedException();

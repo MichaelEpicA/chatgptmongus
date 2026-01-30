@@ -1,7 +1,8 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using Hazel;
 using InnerNet;
+using UnityEngine;
 
 namespace BetterAmongUs.Modules.AntiCheat;
 
@@ -35,7 +36,21 @@ internal sealed class CheckMurderHandler : RPCHandler
                 {
                     sender.RpcMurderPlayer(target, true);
                 }
+                else
+                {
+                    string targetIssue = GetTargetIssue(target);
+                    LogRpcInfo($"Invalid murder target: {targetIssue}");
+                }
             }
+            else
+            {
+                string senderIssue = GetSenderIssue(sender, target);
+                LogRpcInfo($"Invalid murder attempt: {senderIssue}");
+            }
+        }
+        else
+        {
+            LogRpcInfo($"Murder target is null");
         }
 
         return false;
@@ -45,9 +60,38 @@ internal sealed class CheckMurderHandler : RPCHandler
     {
         if (!GameState.IsHost)
         {
+            LogRpcInfo($"Non-host attempted CheckMurder RPC");
             return false;
         }
 
         return true;
+    }
+
+    private static string GetSenderIssue(PlayerControl sender, PlayerControl target)
+    {
+        if (!sender.IsAlive()) return "Sender not alive";
+        if (!sender.IsImpostorTeam()) return "Sender not impostor team";
+        if (sender.inMovingPlat) return "Sender in moving platform";
+        if (sender.IsInVent()) return "Sender in vent";
+        if (sender.IsInVanish()) return "Sender vanished";
+        if (sender.shapeshifting) return "Sender shapeshifting";
+        if (sender.onLadder) return "Sender on ladder";
+        if (sender.MyPhysics.Animations.IsPlayingAnyLadderAnimation()) return "Sender in ladder animation";
+        if (!CheckRange(sender.GetCustomPosition(), target.GetCustomPosition(), 3f))
+            return $"Out of range (distance: {Vector2.Distance(sender.GetCustomPosition(), target.GetCustomPosition())})";
+
+        return "Unknown sender issue";
+    }
+
+    private string GetTargetIssue(PlayerControl target)
+    {
+        if (!target.IsAlive()) return "Target not alive";
+        if (target.IsImpostorTeam()) return "Target is impostor team";
+        if (target.inMovingPlat) return "Target in moving platform";
+        if (target.IsInVent()) return "Target in vent";
+        if (target.onLadder) return "Target on ladder";
+        if (target.MyPhysics.Animations.IsPlayingAnyLadderAnimation()) return "Target in ladder animation";
+
+        return "Unknown target issue";
     }
 }

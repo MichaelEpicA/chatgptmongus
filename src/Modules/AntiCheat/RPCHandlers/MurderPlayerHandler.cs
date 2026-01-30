@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Mono;
 using Hazel;
@@ -13,7 +13,6 @@ internal sealed class MurderPlayerHandler : RPCHandler
 {
     internal override byte CallId => (byte)RpcCalls.MurderPlayer;
 
-    // Prevent ban exploit
     internal override bool HandleAntiCheatCancel(PlayerControl? player, MessageReader reader)
     {
         PlayerControl target = reader.ReadNetObject<PlayerControl>();
@@ -24,11 +23,11 @@ internal sealed class MurderPlayerHandler : RPCHandler
             {
                 target.BetterData().AntiCheatInfo.TimesAttemptedKilled++;
 
-                if (target.BetterData().AntiCheatInfo.TimesAttemptedKilled >= 5 && !target.IsAlive())
+                if (target.BetterData().AntiCheatInfo.TimesAttemptedKilled >= 10 && !target.IsAlive())
                 {
                     if (BetterNotificationManager.NotifyCheat(player, string.Format(Translator.GetString("AntiCheat.InvalidAction"), Translator.GetString("AntiCheat.TryBanExploit"))))
                     {
-                        LogRpcInfo($"{target.BetterData().AntiCheatInfo.TimesAttemptedKilled >= 5} && {!target.IsAlive()}");
+                        LogRpcInfo($"Ban exploit detected: Player attempted to kill dead target {target.BetterData().AntiCheatInfo.TimesAttemptedKilled} times");
                     }
                     return false;
                 }
@@ -36,6 +35,7 @@ internal sealed class MurderPlayerHandler : RPCHandler
                 // Cancel murder on client if not alive
                 if (!target.IsAlive())
                 {
+                    LogRpcInfo($"Murder blocked: Target {target.BetterData()?.RealName} is not alive");
                     return false;
                 }
             }
@@ -54,10 +54,20 @@ internal sealed class MurderPlayerHandler : RPCHandler
             {
                 if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
                 {
-                    LogRpcInfo($"{!sender.IsImpostorTeam()} || {sender.IsInVanish()}" +
-                        $" || {!target.IsAlive()} || {target.IsImpostorTeam()}");
+                    string issue = GetMurderIssue(sender, target);
+                    LogRpcInfo($"Invalid murder: {issue}");
                 }
             }
         }
+    }
+
+    private static string GetMurderIssue(PlayerControl sender, PlayerControl target)
+    {
+        if (!sender.IsImpostorTeam()) return "Sender not impostor team";
+        if (!sender.IsAlive()) return "Sender not alive";
+        if (sender.IsInVanish()) return "Sender is vanished";
+        if (target.IsImpostorTeam()) return "Target is impostor team";
+
+        return "Unknown murder issue";
     }
 }

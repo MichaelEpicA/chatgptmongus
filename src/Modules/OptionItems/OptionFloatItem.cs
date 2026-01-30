@@ -3,14 +3,48 @@ using UnityEngine;
 
 namespace BetterAmongUs.Modules.OptionItems;
 
-internal class OptionFloatItem : OptionItem<float>
+/// <summary>
+/// Represents a floating-point number option item with adjustable value range.
+/// </summary>
+public class OptionFloatItem : OptionItem<float>
 {
+    /// <summary>
+    /// Gets whether child options should be shown, based on whether the value is greater than zero.
+    /// </summary>
     internal override bool ShowChildren => base.ShowChildren && Value > 0f;
+
+    /// <summary>
+    /// Gets or sets the valid range for this float option.
+    /// </summary>
     protected FloatRange? Range { get; set; }
+
+    /// <summary>
+    /// Gets or sets the increment/decrement step size for this option.
+    /// </summary>
     protected float Increment { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this option can represent infinite values (value ≤ 0).
+    /// </summary>
     protected bool CanBeInfinite { get; set; }
+
+    /// <summary>
+    /// Gets or sets the prefix and postfix strings for value display.
+    /// </summary>
     protected (string prefix, string postfix) Fixs { get; set; }
 
+    /// <summary>
+    /// Creates a new float option item or returns an existing one with the same ID.
+    /// </summary>
+    /// <param name="id">The unique identifier for this option.</param>
+    /// <param name="tab">The tab this option belongs to.</param>
+    /// <param name="tranStr">The translation key for the option name.</param>
+    /// <param name="Min_Max_Increment">Tuple containing min value, max value, and increment step.</param>
+    /// <param name="defaultValue">The default value for the option.</param>
+    /// <param name="Prefix_Postfix">Tuple containing prefix and postfix strings for display.</param>
+    /// <param name="parent">Optional parent option for hierarchical organization.</param>
+    /// <param name="canBeInfinite">Whether this option can represent infinite values.</param>
+    /// <returns>A new or existing OptionFloatItem instance.</returns>
     internal static OptionFloatItem Create(int id, OptionTab tab, string tranStr, (float minValue, float maxValue, float incrementValue) Min_Max_Increment, float defaultValue, (string prefix, string postfix) Prefix_Postfix = new(), OptionItem? parent = null, bool canBeInfinite = false)
     {
         if (GetOptionById(id) is OptionFloatItem floatItem)
@@ -20,7 +54,7 @@ internal class OptionFloatItem : OptionItem<float>
         }
 
         OptionFloatItem Item = new();
-        AllTBROptions.Add(Item);
+        AllOptions.Add(Item);
         Item._id = id;
         Item.Tab = tab;
         Item.Translation = tranStr;
@@ -40,11 +74,14 @@ internal class OptionFloatItem : OptionItem<float>
         return Item;
     }
 
+    /// <summary>
+    /// Creates the UI behavior for this float option.
+    /// </summary>
     protected override void CreateBehavior()
     {
         TryLoad();
         if (!GameSettingMenu.Instance) return;
-        AllTBROptionsTemp.Add(this);
+        AllOptionsTemp.Add(this);
         var numberOption = UnityEngine.Object.Instantiate(Tab.AUTab.numberOptionOrigin, Tab.AUTab.settingsContainer);
         Option = numberOption;
         Obj = Option.gameObject;
@@ -57,6 +94,9 @@ internal class OptionFloatItem : OptionItem<float>
         SetOptionVisuals();
     }
 
+    /// <summary>
+    /// Sets up the specific behavior for the NumberOption component.
+    /// </summary>
     protected override void SetupOptionBehavior()
     {
         if (Option is NumberOption numberOption)
@@ -71,6 +111,9 @@ internal class OptionFloatItem : OptionItem<float>
         }
     }
 
+    /// <summary>
+    /// Increases the value based on modifier keys for larger increments.
+    /// </summary>
     protected void Increase()
     {
         int plus = 1;
@@ -85,6 +128,9 @@ internal class OptionFloatItem : OptionItem<float>
         SetValue(value);
     }
 
+    /// <summary>
+    /// Decreases the value based on modifier keys for larger decrements.
+    /// </summary>
     protected void Decrease()
     {
         int plus = 1;
@@ -99,12 +145,20 @@ internal class OptionFloatItem : OptionItem<float>
         SetValue(value);
     }
 
-    internal override void SetValue(float newValue)
+    /// <summary>
+    /// Sets the value, clamping it to the valid range.
+    /// </summary>
+    /// <param name="newValue">The new value to set.</param>
+    public override void SetValue(float newValue)
     {
         newValue = Math.Clamp(newValue, Range.min, Range.max);
         base.SetValue(newValue);
     }
 
+    /// <summary>
+    /// Updates the visual appearance of the float option based on its current value.
+    /// </summary>
+    /// <param name="updateTabVisuals">Whether to update the parent tab visuals as well.</param>
     internal override void UpdateVisuals(bool updateTabVisuals = true)
     {
         if (Option is NumberOption numberOption)
@@ -130,8 +184,11 @@ internal class OptionFloatItem : OptionItem<float>
         }
     }
 
-
-    internal override string ValueAsString()
+    /// <summary>
+    /// Gets the string representation of the float value with formatting.
+    /// </summary>
+    /// <returns>A formatted string showing the value with prefix/postfix or infinity symbol.</returns>
+    public override string ValueAsString()
     {
         if (CanBeInfinite)
         {
@@ -144,7 +201,23 @@ internal class OptionFloatItem : OptionItem<float>
         return $"{Fixs.prefix}{Value}{Fixs.postfix}";
     }
 
-    internal override float GetFloat() => GetValue();
-    internal override bool Is(float @float) => @float == GetFloat();
-    internal override bool Is(int @int) => @int == GetFloat();
+    /// <summary>
+    /// Gets the float value of this option.
+    /// </summary>
+    /// <returns>The current float value.</returns>
+    public override float GetFloat() => GetValue();
+
+    /// <summary>
+    /// Checks if the option value matches a specific float.
+    /// </summary>
+    /// <param name="@float">The float value to compare against.</param>
+    /// <returns>True if the option value matches, false otherwise.</returns>
+    public override bool Is(float @float) => @float == GetFloat();
+
+    /// <summary>
+    /// Checks if the option value matches a specific integer.
+    /// </summary>
+    /// <param name="@int">The integer value to compare against.</param>
+    /// <returns>True if the option value matches (as float), false otherwise.</returns>
+    public override bool Is(int @int) => @int == GetFloat();
 }

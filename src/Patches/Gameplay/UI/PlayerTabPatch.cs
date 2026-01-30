@@ -1,22 +1,22 @@
 ﻿using BetterAmongUs.Data;
 using BetterAmongUs.Data.Json;
 using BetterAmongUs.Helpers;
-using BetterAmongUs.Patches.Client;
+using BetterAmongUs.Patches.Client.Managers;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;
 
-[HarmonyPatch(typeof(PlayerTab))]
+[HarmonyPatch]
 internal static class PlayerTabPatch
 {
     private static List<PassiveButton> presetButtons = [];
     private static float cooldown = 0f;
 
-    [HarmonyPatch(nameof(PlayerTab.OnEnable))]
+    [HarmonyPatch(typeof(PlayerTab), nameof(PlayerTab.OnEnable))]
     [HarmonyPrefix]
-    private static void OnEnable_Prefix(PlayerTab __instance)
+    private static void PlayerTab_OnEnable_Prefix(PlayerTab __instance)
     {
         foreach (var button in presetButtons.ToArray())
         {
@@ -61,9 +61,9 @@ internal static class PlayerTabPatch
 
     private static readonly List<SpriteRenderer> _favoriteIcons = [];
 
-    [HarmonyPatch(nameof(PlayerTab.OnEnable))]
+    [HarmonyPatch(typeof(PlayerTab), nameof(PlayerTab.OnEnable))]
     [HarmonyPostfix]
-    private static void OnEnable_Postfix(PlayerTab __instance)
+    private static void PlayerTab_OnEnable_Postfix(PlayerTab __instance)
     {
         _favoriteIcons.Clear();
 
@@ -129,7 +129,7 @@ internal static class PlayerTabPatch
 
     private static PassiveButton CreateButton(this PlayerTab __instance, string name, Vector3 pos, Action callback)
     {
-        var button = UnityEngine.Object.Instantiate(MainMenuPatch.ButtonPrefab, __instance.transform);
+        var button = UnityEngine.Object.Instantiate(MainMenuManagerPatch.ButtonPrefab, __instance.transform);
         button.gameObject.SetActive(true);
         button.gameObject.SetLayers("UI");
         button.transform.localPosition = pos;
@@ -142,9 +142,9 @@ internal static class PlayerTabPatch
         return button;
     }
 
-    [HarmonyPatch(nameof(PlayerTab.Update))]
+    [HarmonyPatch(typeof(PlayerTab), nameof(PlayerTab.Update))]
     [HarmonyPrefix]
-    private static void Updatee_Postfix(PlayerTab __instance)
+    private static void PlayerTab_Updatee_Postfix(PlayerTab __instance)
     {
         if (cooldown > 0f)
         {

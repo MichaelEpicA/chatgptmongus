@@ -1,19 +1,22 @@
 using AmongUs.Data;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using Discord;
 using HarmonyLib;
 
-namespace BetterAmongUs.Patches.Client;
+namespace BetterAmongUs.Patches.Client.Discord;
 
-
-[HarmonyPatch(typeof(ActivityManager), nameof(ActivityManager.UpdateActivity))]
-internal static class DiscordRPC
+[HarmonyPatch]
+internal static class DiscordPatch
 {
     private static string lobbycode = "";
     private static string region = "";
 
-    private static void Prefix([HarmonyArgument(0)] Activity activity)
+    [HarmonyPatch(typeof(ActivityManager), nameof(ActivityManager.UpdateActivity))]
+    [HarmonyPrefix]
+    private static void ActivityManager_UpdateActivity_Prefix(Activity activity)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_DiscordRP)) return;
         if (activity == null) return;
 
         string details = $"BAU {BAUPlugin.GetVersionText()}";

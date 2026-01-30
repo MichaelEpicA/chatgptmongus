@@ -1,5 +1,6 @@
 ﻿using BetterAmongUs.Attributes;
 using BetterAmongUs.Enums;
+using BetterAmongUs.Patches.Gameplay.UI.Chat;
 
 namespace BetterAmongUs.Commands;
 
@@ -24,7 +25,7 @@ internal sealed class AllCommandsCommand : BaseCommand
             {
                 if (i < allNormalCommands.Length)
                 {
-                    list += $"\n{mid}<color=#e0b700><b>{BAUPlugin.CommandPrefix.Value}{allNormalCommands[i].Name}</b></color> <size=65%><color=#735e00>{allNormalCommands[i].Description}.</color></size>";
+                    list += $"\n{mid}<color=#e0b700><b>{ChatCommandsPatch.CommandPrefix}{allNormalCommands[i].Name}</b></color> <size=65%><color=#735e00>{allNormalCommands[i].Description}.</color></size>";
                 }
             }
         }

@@ -2,17 +2,18 @@
 using BetterAmongUs.Enums;
 using BetterAmongUs.Helpers;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
 
 namespace BetterAmongUs.Patches.Gameplay.UI.Chat;
 
-[HarmonyPatch(typeof(ChatController))]
+[HarmonyPatch]
 internal static class ChatCommandsPatch
 {
     private static bool _enabled = true;
-    internal static string CommandPrefix => BAUPlugin.CommandPrefix.Value;
+    internal static string CommandPrefix => BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Force_BAU_Command_Prefix) ? "bau:" : BAUPlugin.CommandPrefix.Value;
 
     // Run code for specific commands
     private static void HandleCommand()
@@ -28,11 +29,11 @@ internal static class ChatCommandsPatch
     }
 
     // Check if command is typed when sending chat message
-    [HarmonyPatch(nameof(ChatController.SendChat))]
+    [HarmonyPatch(typeof(ChatController), nameof(ChatController.SendChat))]
     [HarmonyPrefix]
-    private static bool SendChat_Prefix(ChatController __instance)
+    private static bool ChatController_SendChat_Prefix(ChatController __instance)
     {
-        if (!_enabled)
+        if (!_enabled || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllCommands))
         {
             return true;
         }
@@ -49,6 +50,11 @@ internal static class ChatCommandsPatch
             if (ChatPatch.ChatHistory.Count == 0 || ChatPatch.ChatHistory[^1] != text) ChatPatch.ChatHistory.Add(text);
             ChatPatch.CurrentHistorySelection = ChatPatch.ChatHistory.Count;
             return true;
+        }
+
+        if (!closestCommand.CanRunCommand(out string _))
+        {
+            return false;
         }
 
         HandleCommand();
@@ -72,9 +78,9 @@ internal static class ChatCommandsPatch
     private static TextMeshPro? commandText;
     private static TextMeshPro? commandInfo;
 
-    [HarmonyPatch(nameof(ChatController.Toggle))]
+    [HarmonyPatch(typeof(ChatController), nameof(ChatController.Toggle))]
     [HarmonyPostfix]
-    private static void Awake_Postfix(ChatController __instance)
+    private static void ChatController_Awake_Postfix(ChatController __instance)
     {
         if (commandText == null)
         {
@@ -107,11 +113,11 @@ internal static class ChatCommandsPatch
     private static BaseCommand? closestCommand;
 
     // Command helper
-    [HarmonyPatch(nameof(ChatController.Update))]
+    [HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
     [HarmonyPostfix]
-    private static void Update_Postfix(ChatController __instance)
+    private static void ChatController_Update_Postfix(ChatController __instance)
     {
-        if (!_enabled)
+        if (!_enabled || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllCommands))
         {
             ClearCommandDisplay();
             return;
@@ -124,13 +130,12 @@ internal static class ChatCommandsPatch
 
         if (text.Length > 0 && text.StartsWith(CommandPrefix))
         {
-            typedCommand = text.Length > 1 ? text[1..] : string.Empty;
+            typedCommand = text.Length > CommandPrefix.Length ? text[CommandPrefix.Length..] : string.Empty;
             string[] typedParts = typedCommand.Split(' ');
 
             closestCommand = GetClosestCommand(typedParts[0]);
             bool isSuggestionValid = closestCommand != null
-                && (typedParts[0].Equals(closestCommand.Name, StringComparison.OrdinalIgnoreCase) || typedParts.Length == 1)
-                && closestCommand.ShowSuggestion();
+                && (typedParts[0].Equals(closestCommand.Name, StringComparison.OrdinalIgnoreCase) || typedParts.Length == 1);
 
             if (isSuggestionValid)
             {
@@ -150,8 +155,8 @@ internal static class ChatCommandsPatch
     private static void ClearCommandDisplay()
     {
         isTypedOut = false;
-        commandText.GetComponent<TextMeshPro>().text = string.Empty;
-        commandInfo.GetComponent<TextMeshPro>().text = string.Empty;
+        commandText.text = string.Empty;
+        commandInfo.text = string.Empty;
     }
 
     private static void HandleValidSuggestion(ChatController __instance, string[] typedParts)
@@ -166,8 +171,13 @@ internal static class ChatCommandsPatch
             __instance.freeChatField.textArea.SetText(fullSuggestion);
         }
 
+        if (!closestCommand.CanRunCommand(out string _))
+        {
+            fullSuggestion = fullSuggestion.ToColor("#FF0300".HexToColor());
+        }
+
         commandText.text = fullSuggestion;
-        commandInfo.text = $"{closestCommand.Description}{GenerateArgumentInfo()}";
+        commandInfo.text = $"{closestCommand.Description}{GenerateArgumentInfo()}{GenerateCanRunInfo()}";
     }
 
     private static string GenerateSuggestion(string[] typedParts)
@@ -193,10 +203,7 @@ internal static class ChatCommandsPatch
     {
         for (int i = 1; i < typedParts.Length && i <= closestCommand.Arguments.Length; i++)
         {
-            if (closestCommand.Arguments[i - 1] != null)
-            {
-                closestCommand.Arguments[i - 1].Arg = typedParts[i];
-            }
+            closestCommand.Arguments[i - 1]?.Arg = typedParts[i];
         }
     }
 
@@ -209,24 +216,36 @@ internal static class ChatCommandsPatch
         return $" - <#a6a6a6>{argumentInfo}</color>";
     }
 
+    private static string GenerateCanRunInfo()
+    {
+        if (!closestCommand.CanRunCommand(out string reason))
+        {
+            return $" - <#FF0300>{reason}</color>";
+        }
+
+        return string.Empty;
+    }
 
     internal static BaseCommand? GetClosestCommand(string typedCommand)
     {
         var directNormalMatch = BaseCommand.allCommands
-            .FirstOrDefault(c => c.Type == CommandType.Normal
-                                 && c.Names.Any(name => string.Equals(name, typedCommand, StringComparison.OrdinalIgnoreCase))
-                                 && c.ShowCommand());
+            .FirstOrDefault(c => FilterCommand(c, CommandType.Normal) &&
+            c.Names.Any(name => string.Equals(name, typedCommand, StringComparison.OrdinalIgnoreCase)));
         if (directNormalMatch != null)
             return directNormalMatch;
 
         var closestNormalCommand = BaseCommand.allCommands
             .OrderBy(c => c.Name)
-            .FirstOrDefault(c => c.Type == CommandType.Normal
-                                 && c.Names.Any(name => name.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase))
-                                 && c.ShowCommand());
+            .FirstOrDefault(c => FilterCommand(c, CommandType.Normal) &&
+            c.Names.Any(name => name.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase)));
         if (closestNormalCommand != null)
             return closestNormalCommand;
 
         return null;
+    }
+
+    private static bool FilterCommand(BaseCommand command, CommandType commandType)
+    {
+        return command.Type == commandType && command.ShowCommand() && !BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Command + command.Name);
     }
 }

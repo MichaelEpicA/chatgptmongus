@@ -14,7 +14,7 @@ internal class ZoomPatch
 
     [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
     [HarmonyPostfix]
-    private static void Update_Postfix()
+    private static void HudManager_Update_Postfix()
     {
         bool canZoom = GameState.IsCanMove &&
               !PlayerControl.LocalPlayer.Is(RoleTypes.GuardianAngel) &&

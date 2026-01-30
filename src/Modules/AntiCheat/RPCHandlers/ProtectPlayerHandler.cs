@@ -1,6 +1,6 @@
 using AmongUs.GameOptions;
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using Hazel;
 
@@ -17,7 +17,7 @@ internal sealed class ProtectPlayerHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText()))
             {
-                LogRpcInfo($"{!sender.Is(RoleTypes.GuardianAngel)}");
+                LogRpcInfo($"Non-GuardianAngel attempted ProtectPlayer RPC");
             }
         }
     }

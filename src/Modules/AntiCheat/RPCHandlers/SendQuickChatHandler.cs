@@ -1,5 +1,5 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using Hazel;
 
@@ -16,8 +16,19 @@ internal sealed class SendQuickChatHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, GetFormatActionText(), forceBan: reader.BytesRemaining == 0))
             {
-                LogRpcInfo($"{sender.IsAlive()} && {GameState.IsInGamePlay} && {!GameState.IsMeeting} && {!GameState.IsExilling} || {reader.BytesRemaining == 0}");
+                string issue = GetQuickChatIssue(sender, reader);
+                LogRpcInfo($"Invalid quick chat attempt: {issue}");
             }
         }
+    }
+
+    private static string GetQuickChatIssue(PlayerControl sender, MessageReader reader)
+    {
+        if (sender.IsAlive() && GameState.IsInGamePlay && !GameState.IsMeeting && !GameState.IsExilling)
+            return "Alive player using quick chat during gameplay";
+        if (reader.BytesRemaining == 0)
+            return "Empty quick chat message";
+
+        return "Unknown quick chat issue";
     }
 }

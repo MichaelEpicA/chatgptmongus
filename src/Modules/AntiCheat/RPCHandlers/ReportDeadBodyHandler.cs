@@ -1,5 +1,5 @@
-using BetterAmongUs.Helpers;
 using BetterAmongUs.Attributes;
+using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Patches.Gameplay.UI;
 using Hazel;
@@ -17,7 +17,7 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, string.Format(Translator.GetString("AntiCheat.InvalidActionRPC"), Enum.GetName((RpcCalls)CallId)), forceBan: true))
             {
-                LogRpcInfo($"{!GameState.IsInGamePlay} || {!BAUPlugin.AllPlayerControls.All(pc => pc.roleAssigned)}");
+                LogRpcInfo($"Report dead body blocked: Game not in play or roles not assigned");
             }
 
             return CancelAsHost;
@@ -28,8 +28,8 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
         {
             if (BetterNotificationManager.NotifyCheat(sender, string.Format(Translator.GetString("AntiCheat.InvalidActionRPC"), Enum.GetName((RpcCalls)CallId))))
             {
-                LogRpcInfo($"{GameState.IsMeeting} && {MeetingHudPatch.timeOpen > 0.5f} || {sender.IsInVent()} || {sender.shapeshifting}" +
-                    $" || {sender.inMovingPlat} || {sender.onLadder} || {sender.MyPhysics.Animations.IsPlayingAnyLadderAnimation()}");
+                string issue = GetReportBlockedIssue(sender);
+                LogRpcInfo($"Report blocked: {issue}");
             }
 
             return CancelAsHost;
@@ -44,7 +44,8 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
             {
                 if (BetterNotificationManager.NotifyCheat(sender, string.Format(Translator.GetString("AntiCheat.InvalidActionRPC"), Enum.GetName((RpcCalls)CallId))))
                 {
-                    LogRpcInfo($"{!deadPlayerInfo.IsDead} || {deadPlayerInfo == sender.Data}");
+                    string issue = GetBodyReportIssue(deadPlayerInfo, sender);
+                    LogRpcInfo($"Invalid body report: {issue}");
                 }
 
                 return CancelAsHost;
@@ -56,8 +57,7 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
             {
                 if (BetterNotificationManager.NotifyCheat(sender, string.Format(Translator.GetString("AntiCheat.InvalidActionRPC"), Enum.GetName((RpcCalls)CallId))))
                 {
-                    LogRpcInfo($"{sender.RemainingEmergencies} -> {GameOptionsManager.Instance.currentNormalGameOptions.NumEmergencyMeetings}" +
-                        $" - {sender.RemainingEmergencies <= 0}");
+                    LogRpcInfo($"Emergency meeting: No meetings remaining ({sender.RemainingEmergencies} left)");
                 }
 
                 return CancelAsHost;
@@ -65,5 +65,26 @@ internal sealed class ReportDeadBodyHandler : RPCHandler
         }
 
         return true;
+    }
+
+    private static string GetReportBlockedIssue(PlayerControl sender)
+    {
+        if (GameState.IsMeeting && MeetingHudPatch.timeOpen > 5f) return "Meeting already in progress";
+        if (GameState.IsHideNSeek) return "Hide and Seek mode";
+        if (sender.IsInVent()) return "Sender in vent";
+        if (sender.shapeshifting) return "Sender shapeshifting";
+        if (sender.inMovingPlat) return "Sender in moving platform";
+        if (sender.onLadder) return "Sender on ladder";
+        if (sender.MyPhysics.Animations.IsPlayingAnyLadderAnimation()) return "Sender in ladder animation";
+
+        return "Unknown report blocked issue";
+    }
+
+    private static string GetBodyReportIssue(NetworkedPlayerInfo deadPlayerInfo, PlayerControl sender)
+    {
+        if (!deadPlayerInfo.IsDead) return "Reported player is not dead";
+        if (deadPlayerInfo == sender.Data) return "Cannot report yourself";
+
+        return "Unknown body report issue";
     }
 }

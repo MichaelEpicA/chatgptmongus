@@ -6,14 +6,14 @@ using UnityEngine;
 
 namespace BetterAmongUs.Patches.Managers;
 
-[HarmonyPatch(typeof(FindAGameManager))]
+[HarmonyPatch]
 internal static class FindAGameManagerPatch
 {
     public static Scroller? Scroller;
 
-    [HarmonyPatch(nameof(FindAGameManager.Start))]
+    [HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.Start))]
     [HarmonyPrefix]
-    private static void Start_Prefix(FindAGameManager __instance)
+    private static void FindAGameManager_Start_Prefix(FindAGameManager __instance)
     {
         __instance.refreshButton.gameObject.SetUIColors();
         __instance.BackButton.gameObject.SetUIColors();
@@ -67,16 +67,16 @@ internal static class FindAGameManagerPatch
         cutOffTop.transform.localScale = new Vector3(1500, 200, 100);
     }
 
-    [HarmonyPatch(nameof(FindAGameManager.RefreshList))]
+    [HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.RefreshList))]
     [HarmonyPostfix]
-    private static void RefreshList_Postfix(FindAGameManager __instance)
+    private static void FindAGameManager_RefreshList_Postfix(FindAGameManager __instance)
     {
         Scroller?.ScrollRelative(new(0f, -100f));
     }
 
-    [HarmonyPatch(nameof(FindAGameManager.HandleList))]
+    [HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.HandleList))]
     [HarmonyPostfix]
-    private static void HandleList_Postfix(FindAGameManager __instance, HttpMatchmakerManager.FindGamesListFilteredResponse response)
+    private static void FindAGameManager_HandleList_Postfix(FindAGameManager __instance, HttpMatchmakerManager.FindGamesListFilteredResponse response)
     {
         __instance.ResetContainers();
         GameListing[] games = response.Games.ToArray();

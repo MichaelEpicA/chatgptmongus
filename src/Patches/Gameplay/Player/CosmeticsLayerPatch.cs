@@ -4,12 +4,12 @@ using HarmonyLib;
 namespace BetterAmongUs.Patches.Gameplay.Player;
 
 // Set text color
-[HarmonyPatch(typeof(CosmeticsLayer))]
+[HarmonyPatch]
 internal static class CosmeticsLayerPatch
 {
-    [HarmonyPatch(nameof(CosmeticsLayer.GetColorBlindText))]
+    [HarmonyPatch(typeof(CosmeticsLayer), nameof(CosmeticsLayer.GetColorBlindText))]
     [HarmonyPrefix]
-    private static bool GetColorBlindText_Prefix(CosmeticsLayer __instance, ref string __result)
+    private static bool CosmeticsLayer_GetColorBlindText_Prefix(CosmeticsLayer __instance, ref string __result)
     {
         if (__instance.bodyMatProperties.ColorId > Palette.PlayerColors.Length) return true;
 
@@ -17,7 +17,7 @@ internal static class CosmeticsLayerPatch
 
         if (!string.IsNullOrEmpty(colorName))
         {
-            __result = (char.ToUpperInvariant(colorName[0]) + colorName.Substring(1).ToLowerInvariant()).ToColor(Palette.PlayerColors[__instance.bodyMatProperties.ColorId]);
+            __result = (char.ToUpperInvariant(colorName[0]) + colorName[1..].ToLowerInvariant()).ToColor(Palette.PlayerColors[__instance.bodyMatProperties.ColorId]);
         }
         else
         {

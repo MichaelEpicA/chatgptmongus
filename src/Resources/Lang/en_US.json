@@ -23,11 +23,10 @@
   "Player.PlatformHidden": "Platform Hidden",
   "Player.Dev": "Dev",
   "Player.BetterUser": "Better User",
-  "Player.BetterHost": "Better Host",
   "Player.SickoUser": "Sicko User",
   "Player.AUMUser": "AUM User",
   "Player.KNUser": "KN User",
-  "Player.KnownCheater": "Known Cheater",
+  "Player.KnownCheater": "Flagged Player",
 
   "DisconnectReason.Left": "{0} Left the game!",
   "DisconnectReason.Disconnect": "{0} Disconnected!",

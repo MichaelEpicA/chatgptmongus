@@ -16,8 +16,11 @@ internal sealed class NewsLoader : MonoBehaviour
 {
     /// <summary>
     /// Coroutine to fetch the news data from the remote repository.
-    /// If no internet connection is detected, it retries several times before giving up.
     /// </summary>
+    /// <returns>IEnumerator for coroutine execution.</returns>
+    /// <remarks>
+    /// If no internet connection is detected, it retries several times before giving up.
+    /// </remarks>
     [HideFromIl2Cpp]
     internal IEnumerator CoFetchNewsData()
     {
@@ -70,9 +73,12 @@ internal sealed class NewsLoader : MonoBehaviour
 
     /// <summary>
     /// Coroutine to download an individual news file from the remote repository.
-    /// If the download fails or the file cannot be deserialized, the process is skipped.
     /// </summary>
     /// <param name="fileName">The name of the news file to download.</param>
+    /// <returns>IEnumerator for coroutine execution.</returns>
+    /// <remarks>
+    /// If the download fails or the file cannot be deserialized, the process is skipped.
+    /// </remarks>
     [HideFromIl2Cpp]
     private IEnumerator CoDownloadNewsFile(string fileName)
     {
@@ -106,6 +112,7 @@ internal sealed class NewsLoader : MonoBehaviour
     /// <summary>
     /// Loads a test news configuration from an embedded resource for local testing purposes.
     /// </summary>
+    /// <returns>IEnumerator for coroutine execution.</returns>
     [HideFromIl2Cpp]
     private IEnumerator CoLoadNewsTest()
     {

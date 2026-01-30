@@ -6,10 +6,20 @@ using System.Text.Json.Serialization;
 
 namespace BetterAmongUs.Data.Json;
 
+/// <summary>
+/// Represents a compressed JSON file for storing game settings with GZIP compression.
+/// </summary>
 internal sealed class BetterGameSettingsFile : AbstractJsonFile
 {
+    /// <summary>
+    /// Gets the file path for the game settings file.
+    /// </summary>
     internal override string FilePath => BetterDataManager.SettingsFile;
 
+    /// <summary>
+    /// Loads the settings file and converts JSON elements to their appropriate types.
+    /// </summary>
+    /// <returns>True if loading was successful, false otherwise.</returns>
     protected override bool Load()
     {
         var success = base.Load();
@@ -42,6 +52,10 @@ internal sealed class BetterGameSettingsFile : AbstractJsonFile
         return success;
     }
 
+    /// <summary>
+    /// Writes JSON data to the file with GZIP compression and base64 encoding.
+    /// </summary>
+    /// <param name="json">The JSON string to write to the file.</param>
     protected override void WriteToFile(string json)
     {
         var jsonDoc = JsonDocument.Parse(json);
@@ -64,6 +78,10 @@ internal sealed class BetterGameSettingsFile : AbstractJsonFile
         File.WriteAllText(FilePath, Convert.ToBase64String(ms.ToArray()));
     }
 
+    /// <summary>
+    /// Reads compressed JSON data from the file and decompresses it.
+    /// </summary>
+    /// <returns>The decompressed JSON string.</returns>
     protected override string ReadFromFile()
     {
         byte[] compressedBytes = Convert.FromBase64String(File.ReadAllText(FilePath).Trim());
@@ -95,6 +113,9 @@ internal sealed class BetterGameSettingsFile : AbstractJsonFile
         return JsonSerializer.Serialize(new { Settings = resultDict });
     }
 
+    /// <summary>
+    /// Gets the dictionary of game settings with integer keys and various value types.
+    /// </summary>
     [JsonPropertyName(nameof(Settings))]
-    public Dictionary<int, object?> Settings { get; set; } = [];
+    public Dictionary<int, object?> Settings { get; private set; } = [];
 }

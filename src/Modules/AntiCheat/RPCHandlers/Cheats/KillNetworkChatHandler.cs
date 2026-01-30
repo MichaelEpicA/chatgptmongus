@@ -1,8 +1,9 @@
+using BetterAmongUs.Attributes;
 using BetterAmongUs.Data;
 using BetterAmongUs.Enums;
 using BetterAmongUs.Helpers;
-using BetterAmongUs.Attributes;
 using BetterAmongUs.Managers;
+using BetterAmongUs.Modules.Support;
 using BetterAmongUs.Mono;
 using BetterAmongUs.Patches.Gameplay.UI.Settings;
 using Hazel;
@@ -17,7 +18,7 @@ internal sealed class KillNetworkChatHandler : RPCHandler
 
     internal override void HandleCheatRpcCheck(PlayerControl? sender, MessageReader reader)
     {
-        if (!BAUPlugin.AntiCheat.Value || !BetterGameSettings.DetectCheatClients.GetBool()) return;
+        if (!BAUPlugin.AntiCheat.Value || BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat) || !BetterGameSettings.DetectCheatClients.GetBool()) return;
 
         if (!BetterDataManager.BetterDataFile.KNData.Any(info => info.CheckPlayerData(sender.Data)))
         {

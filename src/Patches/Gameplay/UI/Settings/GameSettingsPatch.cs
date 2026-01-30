@@ -3,6 +3,7 @@ using BetterAmongUs.Helpers;
 using BetterAmongUs.Modules;
 using BetterAmongUs.Modules.OptionItems;
 using BetterAmongUs.Modules.OptionItems.NoneOption;
+using BetterAmongUs.Modules.Support;
 using HarmonyLib;
 using UnityEngine;
 
@@ -36,8 +37,8 @@ class BetterGameSettingsTemp
     internal static OptionPlayerItem? HideAndSeekImp5;
 }
 
-[HarmonyPatch(typeof(GameSettingMenu))]
-internal static class GameSettingMenuPatch
+[HarmonyPatch]
+internal static class GameSettingsPatch
 {
     internal static OptionTab? BetterSettingsTab;
 
@@ -123,10 +124,12 @@ internal static class GameSettingMenuPatch
         */
     }
 
-    [HarmonyPatch(nameof(GameSettingMenu.Start))]
+    [HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Start))]
     [HarmonyPostfix]
-    private static void Start_Postfix(GameSettingMenu __instance)
+    private static void GameSettingMenu_Start_Postfix(GameSettingMenu __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameSettings)) return;
+
         SetupSettings();
 
         __instance.gameObject.transform.SetLocalY(-0.1f);
@@ -166,10 +169,12 @@ internal static class GameSettingMenuPatch
         }
     }
 
-    [HarmonyPatch(nameof(GameSettingMenu.ChangeTab))]
+    [HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.ChangeTab))]
     [HarmonyPrefix]
-    private static void ChangeTab_Prefix(GameSettingMenu __instance, [HarmonyArgument(0)] int tabNum, [HarmonyArgument(1)] bool previewOnly)
+    private static void GameSettingMenu_ChangeTab_Prefix(GameSettingMenu __instance, [HarmonyArgument(0)] int tabNum, [HarmonyArgument(1)] bool previewOnly)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameSettings)) return;
+
         if (BetterSettingsTab == null) return;
 
         BetterSettingsTab.AUTab?.gameObject?.SetActive(false);
@@ -187,31 +192,27 @@ internal static class GameSettingMenuPatch
             }
         }
     }
-}
 
-[HarmonyPatch(typeof(GameOptionsMenu))]
-internal static class GameOptionsMenuPatch
-{
-    [HarmonyPatch(nameof(GameOptionsMenu.CreateSettings))]
+    [HarmonyPatch(typeof(GameOptionsMenu), nameof(GameOptionsMenu.CreateSettings))]
     [HarmonyPrefix]
-    private static bool CreateSettings_Prefix(GameOptionsMenu __instance)
+    private static bool GameOptionsMenu_CreateSettings_Prefix(GameOptionsMenu __instance)
     {
-        if (__instance == GameSettingMenuPatch.BetterSettingsTab.AUTab)
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameSettings)) return true;
+
+        if (__instance == BetterSettingsTab.AUTab)
         {
             return false;
         }
 
         return true;
     }
-}
 
-[HarmonyPatch(typeof(OptionsConsole))]
-internal static class OptionsConsolePatch
-{
-    [HarmonyPatch(nameof(OptionsConsole.CanUse))]
+    [HarmonyPatch(typeof(OptionsConsole), nameof(OptionsConsole.CanUse))]
     [HarmonyPrefix]
-    private static void CanUse_Prefix(OptionsConsole __instance)
+    private static void OptionsConsole_CanUse_Prefix(OptionsConsole __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_AllGameSettings)) return;
+
         __instance.HostOnly = false;
     }
 }

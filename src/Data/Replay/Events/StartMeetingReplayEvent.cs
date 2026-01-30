@@ -1,4 +1,6 @@
-﻿namespace BetterAmongUs.Data.Replay.Events;
+﻿using BetterAmongUs.Interfaces;
+
+namespace BetterAmongUs.Data.Replay.Events;
 
 internal sealed class StartMeetingReplayEvent : IReplayEvent<(int playerId, int targetId)>
 {

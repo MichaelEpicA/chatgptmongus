@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace BetterAmongUs.Patches.Gameplay.UI;
 
-[HarmonyPatch(typeof(RoomTracker))]
+[HarmonyPatch]
 internal static class RoomTrackerPatch
 {
-    [HarmonyPatch(nameof(RoomTracker.Awake))]
+    [HarmonyPatch(typeof(RoomTracker), nameof(RoomTracker.Awake))]
     [HarmonyPostfix]
-    private static void Awake_Postfix(RoomTracker __instance)
+    private static void RoomTracker_Awake_Postfix(RoomTracker __instance)
     {
         var originalParent = __instance.transform.parent;
 
