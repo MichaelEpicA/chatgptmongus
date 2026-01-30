@@ -37,6 +37,16 @@ public static class BAUModdedSupportFlags
     /// </summary>
     public static string Disable_CustomModStamp = "client.disable.custommodstamp";
 
+    /// <summary>
+    /// Flag to disable custom ServerDropDown. When set by another mod, BetterAmongUs will disable its custom ServerDropDown.
+    /// </summary>
+    public static string Disable_ServerDropDown = "client.disable.serverdropdown";
+
+    /// <summary>
+    /// Flag to disable custom DiscordRP. When set by another mod, BetterAmongUs will disable its custom DiscordRP for BAU.
+    /// </summary>
+    public static string Disable_DiscordRP = "client.disable.discordrp";
+
     // ============================================
     // Anti-Cheat Features
     // ============================================

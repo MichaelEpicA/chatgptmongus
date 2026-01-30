@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BetterAmongUs.Modules.Support;
+using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,11 +9,12 @@ namespace BetterAmongUs.Patches.Gameplay.UI;
 [HarmonyPatch]
 internal static class ServerDropdownPatch
 {
-    [HarmonyPatch(typeof(FindAGameManager))]
-    [HarmonyPatch(nameof(FindAGameManager.Start))]
+    [HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.Start))]
     [HarmonyPrefix]
     private static void FindAGameManager_Start_Prefix(FindAGameManager __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_ServerDropDown)) return;
+
         var aspectPosition = __instance.serverDropdown.transform.parent.GetComponent<AspectPosition>();
         if (aspectPosition != null)
         {
@@ -25,11 +27,12 @@ internal static class ServerDropdownPatch
         __instance.modeText.transform.localPosition -= new Vector3(0.4f, 0f, 0f);
     }
 
-    [HarmonyPatch(typeof(ServerDropdown))]
-    [HarmonyPatch(nameof(ServerDropdown.FillServerOptions))]
+    [HarmonyPatch(typeof(ServerDropdown), nameof(ServerDropdown.FillServerOptions))]
     [HarmonyPrefix]
     private static bool ServerDropdown_FillServerOptions_Prefix(ServerDropdown __instance)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_ServerDropDown)) return true;
+
         __instance.background.size = new Vector2(5, 1);
 
         int num = 0;

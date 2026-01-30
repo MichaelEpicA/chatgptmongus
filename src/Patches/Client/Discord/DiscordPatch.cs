@@ -1,5 +1,6 @@
 using AmongUs.Data;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using Discord;
 using HarmonyLib;
 
@@ -15,6 +16,7 @@ internal static class DiscordPatch
     [HarmonyPrefix]
     private static void ActivityManager_UpdateActivity_Prefix(Activity activity)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_DiscordRP)) return;
         if (activity == null) return;
 
         string details = $"BAU {BAUPlugin.GetVersionText()}";
