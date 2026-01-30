@@ -1,6 +1,7 @@
 ﻿using BetterAmongUs.Helpers;
 using BetterAmongUs.Managers;
 using BetterAmongUs.Modules;
+using BetterAmongUs.Modules.Support;
 using HarmonyLib;
 
 namespace BetterAmongUs.Patches.Gameplay.Systems;
@@ -16,6 +17,8 @@ internal static class VoteBanSystemPatch
     [HarmonyPrefix]
     private static bool VoteBanSystem_AddVote_Prefix(VoteBanSystem __instance, int srcClient, int clientId)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat)) return true;
+
         if (!GameState.IsHost)
         {
             DoLog = true;
@@ -49,7 +52,7 @@ internal static class VoteBanSystemPatch
         if (!_voteData.TryGetValue(__instance, out var voters))
         {
             _voteData.Clear();
-            _voteData[__instance] = voters = new List<(int, (ushort, string))>();
+            _voteData[__instance] = voters = [];
         }
 
         if (string.IsNullOrEmpty(client.ProductUserId) && string.IsNullOrEmpty(client.FriendCode))
@@ -85,6 +88,8 @@ internal static class VoteBanSystemPatch
     [HarmonyPostfix]
     private static void VoteBanSystem_AddVote_Postfix(VoteBanSystem __instance, int srcClient, int clientId)
     {
+        if (BAUModdedSupportFlags.HasFlag(BAUModdedSupportFlags.Disable_Anticheat)) return;
+
         if (DoLog)
         {
             LogVote(__instance, srcClient, clientId);
