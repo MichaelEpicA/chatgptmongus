@@ -1,6 +1,7 @@
 ﻿using AmongUs.Data;
 using BetterAmongUs.Enums;
 using BetterAmongUs.Helpers;
+using BetterAmongUs.Modules;
 using BetterAmongUs.Mono;
 using Hazel;
 
@@ -26,7 +27,7 @@ internal static class RPC
     /// <param name="customRPC">The custom RPC type to send.</param>
     /// <param name="action">A delegate that writes the custom RPC payload to the message writer.</param>
     /// <param name="targetClientId">The specific client ID to target, or -1 to broadcast to all clients.</param>
-    internal static void SendCustomRpc(CustomRPC customRPC, Action<MessageWriter> action, int targetClientId = -1)
+    internal static void SendCustomRpcPacked(CustomRPC customRPC, Action<MessageWriter> action, int targetClientId = -1)
     {
         var writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetNamePlateStr, SendOption.Reliable, targetClientId);
 
@@ -45,7 +46,7 @@ internal static class RPC
     /// </summary>
     /// <param name="player">The player who sent the RPC message.</param>
     /// <param name="oldReader">The message reader containing the RPC data.</param>
-    internal static void HandleCustomRPC(PlayerControl player, MessageReader oldReader)
+    internal static void HandleCustomRPCPacked(PlayerControl player, MessageReader oldReader)
     {
         if (player == null || player.IsLocalPlayer() || player.Data == null) return;
 
@@ -73,6 +74,55 @@ internal static class RPC
         }
 
         reader.Recycle();
+    }
+
+    /// <summary>
+    /// Processes custom RPC messages received from other players.
+    /// </summary>
+    /// <param name="player">The player who sent the RPC.</param>
+    /// <param name="callId">The ID of the RPC call.</param>
+    /// <param name="oldReader">The message reader containing the RPC data.</param>
+    /// <remarks>
+    /// Handles both defined custom RPCs and protects against unknown RPCs in modded lobbies.
+    /// </remarks>
+    internal static void HandleCustomRPCLegacy(PlayerControl player, byte callId, MessageReader oldReader)
+    {
+        if (player == null || player.IsLocalPlayer() || player.Data == null || Enum.IsDefined(typeof(RpcCalls), callId)) return;
+
+        if (Enum.IsDefined(typeof(CustomRPC), (int)unchecked(callId)))
+        {
+            MessageReader reader = MessageReader.Get(oldReader);
+
+            switch (callId)
+            {
+                case (byte)CustomRPC.SendSecretToPlayer:
+                    {
+                        player.BetterData().HandshakeHandler.HandleSecretFromSender(reader);
+                    }
+                    break;
+                case (byte)CustomRPC.CheckSecretHashFromPlayer:
+                    {
+                        player.BetterData().HandshakeHandler.HandleSecretHashFromPlayer(reader);
+                    }
+                    break;
+            }
+        }
+        else if (!Enum.IsDefined(typeof(CustomRPC), (int)unchecked(callId)))
+        {
+            try
+            {
+                if (!GameState.IsHost)
+                {
+                    if (player.IsHost())
+                    {
+                        var Icon = Translator.GetString("BAUMark");
+                        var BAU = $"<color=#278720>{Icon}</color><color=#0ed400><b>{Translator.GetString("BAU")}</b></color><color=#278720>{Icon}</color>";
+                        Utils.DisconnectSelf(string.Format(Translator.GetString("ModdedLobbyMsg"), BAU));
+                    }
+                }
+            }
+            catch { }
+        }
     }
 
     /// <summary>
