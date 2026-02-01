@@ -117,5 +117,5 @@ internal sealed class BetterGameSettingsFile : AbstractJsonFile
     /// Gets the dictionary of game settings with integer keys and various value types.
     /// </summary>
     [JsonPropertyName(nameof(Settings))]
-    public Dictionary<int, object?> Settings { get; private set; } = [];
+    public Dictionary<int, object?> Settings { get; set; } = [];
 }
