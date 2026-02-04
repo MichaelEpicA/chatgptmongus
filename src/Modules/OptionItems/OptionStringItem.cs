@@ -5,17 +5,17 @@ namespace BetterAmongUs.Modules.OptionItems;
 /// <summary>
 /// Represents an option item that selects from a list of string values.
 /// </summary>
-public sealed class OptionStringItem : OptionItem<int>
+public class OptionStringItem : OptionItem<int>
 {
     /// <summary>
     /// Gets or sets the valid range of indices for this string option.
     /// </summary>
-    private IntRange Range { get; set; } = new();
+    protected IntRange Range { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the array of translation keys for the string options.
     /// </summary>
-    private string[] TranslatorStrings { get; set; } = [];
+    protected string[] TranslatorStrings { get; set; } = [];
 
     /// <summary>
     /// Gets or sets whether this option includes a random selection.
@@ -119,7 +119,7 @@ public sealed class OptionStringItem : OptionItem<int>
     /// <summary>
     /// Increases the string selection index.
     /// </summary>
-    private void Increase()
+    protected void Increase()
     {
         SetValue(Value + 1);
     }
@@ -127,7 +127,7 @@ public sealed class OptionStringItem : OptionItem<int>
     /// <summary>
     /// Decreases the string selection index.
     /// </summary>
-    private void Decrease()
+    protected void Decrease()
     {
         SetValue(Value - 1);
     }
@@ -175,7 +175,7 @@ public sealed class OptionStringItem : OptionItem<int>
     /// Gets the translated string representation of the current selection.
     /// </summary>
     /// <returns>The translated string for the current index.</returns>
-    public sealed override string ValueAsString() => Translator.GetString(TranslatorStrings[Value], showInvalid: false);
+    public override string ValueAsString() => Translator.GetString(TranslatorStrings[Value], showInvalid: false);
 
     /// <summary>
     /// Gets the effective string value index, accounting for random selection.

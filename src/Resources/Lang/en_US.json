@@ -17,6 +17,8 @@
   "SystemNotification": "System Notification",
   "ModdedLobbyMsg": "{0} does not support\n<b>Modded Lobbies</b>",
   "HostInMeeting": "Host: {0}",
+  "Setting.Preset": "Preset {0}",
+  "Setting.Presets": "Presets",
 
   "Player.Loading": "Loading",
   "Player.NoFriendCode": "No Friend Code",
@@ -64,6 +66,7 @@
   "BetterSetting": "Better Settings",
   "BetterSetting.Description": "Edit better settings for your lobby and gameplay.",
   "BetterSetting.SetTo": "Set To:",
+  "BetterSetting.MainHeader.System": "<color=#07B400>System Settings</color>",
   "BetterSetting.MainHeader.AntiCheat": "<color=#4f92ff>Anti-Cheat Settings</color>",
   "BetterSetting.MainHeader.RoleAlgorithm": "<color=#4f92ff>Role Algorithm Settings</color>",
   "BetterSetting.MainHeader.Gameplay": "<color=#d7d700>Gameplay Settings</color>",

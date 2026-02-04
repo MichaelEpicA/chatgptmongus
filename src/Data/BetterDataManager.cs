@@ -21,7 +21,7 @@ internal static class BetterDataManager
     /// <summary>
     /// Legacy data file path (BetterData.json).
     /// </summary>
-    internal static string dataPathOLD = GetFilePath("BetterData");
+    internal static string dataPath_Legacy = GetFilePath("BetterData");
 
     /// <summary>
     /// Current data file path (BetterDataV2.json).
@@ -51,12 +51,12 @@ internal static class BetterDataManager
     /// <summary>
     /// Legacy settings file path.
     /// </summary>
-    internal static string SettingsFileOld = Path.Combine(filePathFolderSettings, "Preset.json");
+    internal static string SettingsFile_Legacy = Path.Combine(filePathFolderSettings, "Settings.dat");
 
     /// <summary>
     /// Current compressed settings file path.
     /// </summary>
-    internal static string SettingsFile = Path.Combine(filePathFolderSettings, "Settings.dat");
+    internal static string SettingsFile => Path.Combine(filePathFolderSettings, $"Preset-{BAUPlugin.SettingsPreset?.Value ?? 0}.dat");
 
     /// <summary>
     /// File containing banned player identifiers.
@@ -98,6 +98,7 @@ internal static class BetterDataManager
     /// </summary>
     internal static void Initialize()
     {
+        LoadLegacyData();
         BetterDataFile.Init();
         BetterGameSettingsFile.Init();
 
@@ -161,6 +162,18 @@ internal static class BetterDataManager
                     writer.WriteLine("// speed**");
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Converts and loads legacy data if it exists.
+    /// </summary>
+    private static void LoadLegacyData()
+    {
+        if (File.Exists(SettingsFile_Legacy))
+        {
+            BAUPlugin.SettingsPreset.Value = 1;
+            File.Move(SettingsFile_Legacy, SettingsFile);
         }
     }
 

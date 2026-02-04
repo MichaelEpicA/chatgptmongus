@@ -149,28 +149,6 @@ internal static class Translator
     }
 
     /// <summary>
-    /// Gets a translated string with optional replacements.
-    /// </summary>
-    /// <param name="key">The translation key.</param>
-    /// <param name="replacements">Dictionary of string replacements to apply.</param>
-    /// <param name="useConsoleLanguage">Whether to force English for console output.</param>
-    /// <param name="showInvalid">Whether to show invalid key indicators.</param>
-    /// <param name="useVanilla">Whether to use vanilla Among Us translations.</param>
-    /// <returns>The translated string.</returns>
-    internal static string GetString(string key, Dictionary<string, string>? replacements = null, bool useConsoleLanguage = false, bool showInvalid = true, bool useVanilla = false)
-    {
-        if (useVanilla)
-        {
-            return GetVanillaString(key, showInvalid);
-        }
-
-        var langId = GetTargetLanguageId(useConsoleLanguage);
-        var result = GetString(key, langId, showInvalid);
-
-        return ApplyReplacements(result, replacements);
-    }
-
-    /// <summary>
     /// Gets a translated string for a specific language.
     /// </summary>
     /// <param name="key">The translation key.</param>
@@ -201,6 +179,60 @@ internal static class Translator
     }
 
     /// <summary>
+    /// Retrieves a localized string corresponding to the specified key, with optional formatting and retrieval options.
+    /// </summary>
+    /// <param name="key">The key that identifies the string resource to retrieve.</param>
+    /// <param name="formatting">An array of objects to format the retrieved string with, or null to return the string without formatting.</param>
+    /// <param name="useConsoleLanguage">true to force retrieval in English for console output; otherwise, false.</param>
+    /// <param name="showInvalid">true to return a placeholder for invalid or missing keys; otherwise, false to return the key itself.</param>
+    /// <param name="vanilla">true to retrieve the string using the default (vanilla) translation set; otherwise, false to use the current or
+    /// specified language.</param>
+    /// <returns>The localized string corresponding to the specified key, formatted if formatting is provided. Returns a
+    /// placeholder or the key itself if the key is invalid, depending on the showInvalid parameter.</returns>
+    internal static string GetString(string key, string[]? formatting = null, bool useConsoleLanguage = false, bool showInvalid = true, bool vanilla = false)
+    {
+        if (vanilla)
+        {
+            string nameToFind = key;
+            if (Enum.TryParse(nameToFind, out StringNames text))
+            {
+                return TranslationController.Instance.GetString(text);
+            }
+            else
+            {
+                return showInvalid ? $"<INVALID:{nameToFind}> (vanillaStr)" : nameToFind;
+            }
+        }
+        var langId = TranslationController.InstanceExists ? TranslationController.Instance.currentLanguage.languageID : SupportedLangs.English;
+        if (useConsoleLanguage) langId = SupportedLangs.English;
+        if (BAUPlugin.ForceOwnLanguage.Value) langId = GetUserSystemLanguage();
+        string str = GetString(key, langId, showInvalid);
+        if (formatting != null)
+            str = string.Format(str, formatting);
+        return str ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Retrieves the localized string values corresponding to the specified keys.
+    /// </summary>
+    /// <param name="keys">A collection of string keys for which to retrieve localized values. Cannot be null.</param>
+    /// <param name="console">true to format the returned strings for console output; otherwise, false. The default is false.</param>
+    /// <param name="showInvalid">true to include a placeholder or indicator for invalid or missing keys; otherwise, false. The default is true.</param>
+    /// <param name="vanilla">true to retrieve the original, unmodified string values; otherwise, false. The default is false.</param>
+    /// <returns>An array of strings containing the localized values for each key in the input collection. The order of the
+    /// returned array matches the order of the input keys.</returns>
+    internal static string[] GetStrings(IEnumerable<string> keys, bool console = false, bool showInvalid = true, bool vanilla = false)
+    {
+        var results = new List<string>();
+        foreach (var trans in keys)
+        {
+            string result = GetString(trans, useConsoleLanguage: console, showInvalid: showInvalid, vanilla: vanilla);
+            results.Add(result);
+        }
+        return [.. results];
+    }
+
+    /// <summary>
     /// Gets a translation from the language map with Chinese character detection.
     /// </summary>
     private static string GetTranslationFromMap(string key, SupportedLangs languageId, Dictionary<int, string> languageMap, bool showInvalid)
@@ -222,19 +254,6 @@ internal static class Translator
 
         // Fallback to English if translation not found
         return languageId == SupportedLangs.English ? $"*{key}" : GetString(key, SupportedLangs.English, showInvalid);
-    }
-
-    /// <summary>
-    /// Gets a vanilla Among Us translated string.
-    /// </summary>
-    private static string GetVanillaString(string key, bool showInvalid)
-    {
-        if (Enum.TryParse<StringNames>(key, out var stringName))
-        {
-            return TranslationController.Instance.GetString(stringName);
-        }
-
-        return showInvalid ? $"<INVALID:{key}> (vanillaStr)" : key;
     }
 
     /// <summary>

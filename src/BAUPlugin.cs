@@ -145,8 +145,8 @@ internal class BAUPlugin : BasePlugin
 
         BAUModdedSupportFlags.Initialize();
         GithubAPI.Connect();
-        BetterDataManager.Initialize();
         LoadOptions();
+        BetterDataManager.Initialize();
         Translator.Initialize();
         Harmony.PatchAll();
         GameSettingsPatch.SetupSettings(true);
@@ -271,6 +271,11 @@ internal class BAUPlugin : BasePlugin
     internal static ConfigEntry<int>? FavoriteColor { get; set; }
 
     /// <summary>
+    /// Gets or sets the configuration entry for the settings preset.
+    /// </summary>
+    internal static ConfigEntry<int>? SettingsPreset { get; private set; }
+
+    /// <summary>
     /// Loads configuration options from BepInEx config file.
     /// </summary>
     private void LoadOptions()
@@ -288,13 +293,14 @@ internal class BAUPlugin : BasePlugin
         ShowFPS = Config.Bind("Better Options", "ShowFPS", false);
         CommandPrefix = Config.Bind("Client Options", "CommandPrefix", "/");
         FavoriteColor = Config.Bind("Mod", "FavoriteColor", -1);
+        SettingsPreset = Config.Bind("Mod", "SettingsPreset", 0);
 
         BAUModdedSupportEvents.InvokeAll_OnBAUConfigEntriesLoaded([
             PrivateOnlyLobby, AntiCheat, SendBetterRpc,
             BetterNotifications, ForceOwnLanguage, ChatDarkMode,
             ChatInGameplay, LobbyPlayerInfo, DisableLobbyTheme,
             UnlockFPS, ShowFPS, CommandPrefix,
-            FavoriteColor,
+            FavoriteColor, SettingsPreset
         ]);
     }
 
