@@ -29,15 +29,15 @@ internal static class RPC
     /// <param name="targetClientId">The specific client ID to target, or -1 to broadcast to all clients.</param>
     internal static void SendCustomRpcPacked(CustomRPC customRPC, Action<MessageWriter> action, int targetClientId = -1)
     {
-        var writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SetNamePlateStr, SendOption.Reliable, targetClientId);
+        AmongUsClient.Instance.SendRpcImmediately(PlayerControl.LocalPlayer.NetId, RpcCalls.SetNamePlateStr, SendOption.Reliable, writer =>
+        {
+            writer.Write(DataManager.Player.Customization.NamePlate);
+            writer.Write(PlayerControl.LocalPlayer.GetNextRpcSequenceId(RpcCalls.SetNamePlateStr));
 
-        writer.Write(DataManager.Player.Customization.NamePlate);
-        writer.Write(PlayerControl.LocalPlayer.GetNextRpcSequenceId(RpcCalls.SetNamePlateStr));
-
-        writer.Write(CUSTOM_RPC_FLAG); // Flag to check if its a rpc packed into SetNamePlateStr
-        writer.Write((byte)customRPC);
-        action(writer);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+            writer.Write(CUSTOM_RPC_FLAG); // Flag to check if its a rpc packed into SetNamePlateStr
+            writer.Write((byte)customRPC);
+            action(writer);
+        }, targetClientId);
     }
 
     /// <summary>

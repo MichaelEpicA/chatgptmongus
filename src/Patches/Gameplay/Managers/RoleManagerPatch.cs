@@ -15,11 +15,14 @@ internal static class RoleManagerPatch
     internal static Dictionary<string, int> ImpostorMultiplier = []; // HashPuid, Multiplier
     private static readonly Random random = new();
 
-    // Check if client is not verified Better Among Us user
-    static readonly Func<InnerNet.ClientData, bool> clientCheck = (clientData) =>
+    // Check if client is verified Better Among Us user
+    private static Func<InnerNet.ClientData, bool> SendTo(PlayerControl target)
     {
-        return clientData?.BetterData()?.IsVerifiedBetterUser != true;
-    };
+        return (clientData) =>
+        {
+            return clientData.Id != target.GetClientId() && clientData?.BetterData()?.IsVerifiedBetterUser != true;
+        };
+    }
 
     [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SetRole))]
     [HarmonyPrefix]
@@ -156,10 +159,11 @@ internal static class RoleManagerPatch
                         {
                             if (kvp.Key is not (RoleTypes.Phantom or RoleTypes.Viper))
                             {
-                                List<MessageWriter> messageWriter = AmongUsClient.Instance.StartRpcDesync(pc.NetId, (byte)RpcCalls.SetRole, SendOption.None, pc.GetClientId(), clientCheck);
-                                messageWriter.ForEach(mW => mW.Write((ushort)RoleTypes.Impostor));
-                                messageWriter.ForEach(mW => mW.Write(false));
-                                AmongUsClient.Instance.FinishRpcDesync(messageWriter);
+                                AmongUsClient.Instance.SendRpcImmediatelyDesync(pc.NetId, RpcCalls.SetRole, SendOption.None, SendTo(pc), writer =>
+                                {
+                                    writer.Write((ushort)RoleTypes.Impostor);
+                                    writer.Write(false);
+                                });
                             }
                         }
 
@@ -195,10 +199,11 @@ internal static class RoleManagerPatch
                         {
                             if (kvp.Key is not RoleTypes.Noisemaker)
                             {
-                                List<MessageWriter> messageWriter = AmongUsClient.Instance.StartRpcDesync(pc.NetId, (byte)RpcCalls.SetRole, SendOption.None, pc.GetClientId(), clientCheck);
-                                messageWriter.ForEach(mW => mW.Write((ushort)RoleTypes.Crewmate));
-                                messageWriter.ForEach(mW => mW.Write(false));
-                                AmongUsClient.Instance.FinishRpcDesync(messageWriter);
+                                AmongUsClient.Instance.SendRpcImmediatelyDesync(pc.NetId, RpcCalls.SetRole, SendOption.None, SendTo(pc), writer =>
+                                {
+                                    writer.Write((ushort)RoleTypes.Crewmate);
+                                    writer.Write(false);
+                                });
                             }
                         }
 
@@ -352,10 +357,11 @@ internal static class RoleManagerPatch
                 // Desync ghost role to hide it from non-BAU players
                 if (BetterGameSettings.DesyncRoles.GetBool())
                 {
-                    List<MessageWriter> messageWriter = AmongUsClient.Instance.StartRpcDesync(player.NetId, (byte)RpcCalls.SetRole, SendOption.None, player.GetClientId(), clientCheck);
-                    messageWriter.ForEach(mW => mW.Write((ushort)player.Data.Role.DefaultGhostRole));
-                    messageWriter.ForEach(mW => mW.Write(false));
-                    AmongUsClient.Instance.FinishRpcDesync(messageWriter);
+                    AmongUsClient.Instance.SendRpcImmediatelyDesync(player.NetId, RpcCalls.SetRole, SendOption.None, SendTo(player), writer =>
+                    {
+                        writer.Write((ushort)player.Data.Role.DefaultGhostRole);
+                        writer.Write(false);
+                    });
                 }
 
                 return false;

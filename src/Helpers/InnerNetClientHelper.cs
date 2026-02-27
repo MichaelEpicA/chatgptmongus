@@ -178,57 +178,40 @@ internal static class InnerNetClientHelper
     }
 
     /// <summary>
-    /// Starts the RPC desynchronization process for the given player, call ID, and send option.
+    /// Sends an RPC message immediately to all clients that match the specified target criteria, bypassing standard
+    /// synchronization mechanisms.
     /// </summary>
-    /// <param name="client">The InnerNetClient instance.</param>
-    /// <param name="playerNetId">The network ID of the player.</param>
-    /// <param name="callId">The RPC call ID.</param>
-    /// <param name="option">The send option for the RPC.</param>
-    /// <param name="ignoreClientId">The client ID to ignore. Default is -1, which means no client is ignored.</param>
-    /// <param name="clientCheck">Optional function to filter which clients receive the RPC.</param>
-    /// <returns>A list of MessageWriter instances for the RPC calls.</returns>
-    /// <example>
-    /// <code>
-    /// List&lt;MessageWriter&gt; messageWriter = AmongUsClient.Instance.StartRpcDesync(PlayerNetId, (byte)RpcCalls, SendOption, ClientId);
-    /// messageWriter.ForEach(mW => mW.Write("RPC TEST"));
-    /// AmongUsClient.Instance.FinishRpcDesync(messageWriter);
-    /// </code>
-    /// </example>
-    internal static List<MessageWriter> StartRpcDesync(this InnerNetClient client, uint playerNetId, byte callId, SendOption option, int ignoreClientId = -1, Func<ClientData, bool>? clientCheck = null)
+    /// <param name="client">The InnerNetClient instance used to send the RPC messages.</param>
+    /// <param name="playerNetId">The network ID of the player on whose behalf the RPC is sent.</param>
+    /// <param name="callId">The identifier for the RPC call to be executed.</param>
+    /// <param name="option">The send option that determines how the message is delivered (e.g., reliability, ordering).</param>
+    /// <param name="targetClients">A function that selects which clients should receive the RPC message. The RPC is sent only to clients for which
+    /// this function returns <see langword="true"/>.</param>
+    /// <param name="writeTo">An action that writes the RPC payload to the provided MessageWriter.</param>
+    internal static void SendRpcImmediatelyDesync(this InnerNetClient client, uint playerNetId, RpcCalls callId, SendOption option, Func<ClientData, bool> targetClients, Action<MessageWriter> writeTo)
     {
-        List<MessageWriter> messageWriters = [];
-
-        if (ignoreClientId < 0)
+        foreach (var allClients in AmongUsClient.Instance.allClients)
         {
-            messageWriters.Add(client.StartRpcImmediately(playerNetId, callId, option, -1));
-        }
-        else
-        {
-            foreach (var allClients in AmongUsClient.Instance.allClients.WhereIl2Cpp(c => c.Id != ignoreClientId))
-            {
-                if (clientCheck == null || clientCheck.Invoke(allClients))
-                {
-                    messageWriters.Add(client.StartRpcImmediately(playerNetId, callId, option, allClients.Id));
-                }
-            }
-        }
+            if (!targetClients(allClients)) continue;
 
-        return messageWriters;
+            client.SendRpcImmediately(playerNetId, callId, option, writeTo, allClients.Id);
+        }
     }
 
     /// <summary>
-    /// Completes and sends the RPC desynchronization messages.
+    /// Sends a remote procedure call (RPC) message immediately to the specified player, using the provided message
+    /// writer action and send option.
     /// </summary>
-    /// <param name="client">The InnerNetClient instance.</param>
-    /// <param name="messageWriters">The list of MessageWriters to finish and send.</param>
-    internal static void FinishRpcDesync(this InnerNetClient client, List<MessageWriter> messageWriters)
+    /// <param name="client">The InnerNetClient instance used to send the RPC message.</param>
+    /// <param name="playerNetId">The network identifier of the target player to whom the RPC is sent.</param>
+    /// <param name="callId">The identifier of the RPC call to invoke.</param>
+    /// <param name="option">The send option that determines how the message is delivered (such as reliability or channel).</param>
+    /// <param name="writeTo">An action that writes the RPC message content to the provided MessageWriter.</param>
+    /// <param name="targetClientId">The client identifier of the specific target client. Use -1 to broadcast to all clients.</param>
+    internal static void SendRpcImmediately(this InnerNetClient client, uint playerNetId, RpcCalls callId, SendOption option, Action<MessageWriter> writeTo, int targetClientId = -1)
     {
-        foreach (var msg in messageWriters)
-        {
-            msg.EndMessage();
-            msg.EndMessage();
-            client.SendOrDisconnect(msg);
-            msg.Recycle();
-        }
+        var writer = client.StartRpcImmediately(playerNetId, (byte)callId, option, targetClientId);
+        writeTo(writer);
+        client.FinishRpcImmediately(writer);
     }
 }
